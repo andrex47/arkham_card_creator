@@ -1,0 +1,8 @@
+# WARNING: If this file is deleted, Strange Eons will no longer
+# see this as a project/task folder!
+selected-members = :Scripts/tradutorDebug.js
+first-row = 0
+open-folders = :Scripts
+notes = 
+res-id = andre
+type = PROJECT
