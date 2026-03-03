@@ -4,20 +4,37 @@ function caçaChavesManual() {
     var s = editor.getGameComponent().getSettings();
 
     // Lista de nomes prováveis que o plugin usa
+    // Adicione estes à sua lista atual:
     var alvos = [
-        "Shroud", "LocationShroud", "Velo",
-        "Clues", "LocationClues", "Pistas",
-        "Value", "LocationValue",
-        "Title", "Name", "Subtitle",
-        "Rules", "Text", "Flavor",
-        "Traits", "Keywords",
-        "SkillIcon1", "SkillIcon2", "Icon1", "Icon2",
-        "Skill1", "Skill2", "Slot1", "Slot2",
-        "SkillIconType1", "SkillIconType2",
-        "SkillIntellect", "IntellectIcon", "Intellect",
-        "Faction", "Class", "Collection", "Symbol", "Icon", "CardClass"
+        // --- CENÁRIO / CHAOS (Frente e Verso) ---
+        "Skull", "Cultist", "Tablet", "ElderThing",
+        "SkullBack", "CultistBack", "TabletBack", "ElderThingBack",
+        "Skull2", "Cultist2", "Tablet2", "ElderThing2",
+        "HardSkull", "HardCultist", "HardTablet", "HardElderThing",
+        "EasySkull", "StandardSkull", "EasyChaos", "HardChaos",
+        "Chaos", "ChaosBack", "Chaos2",
+        
+        // --- ATO E AGENDA ---
+        "Story", "StoryBack", "Story2",
+        "Objective", "ObjectiveBack", "Objective2",
+        "AgendaNo", "ActNo", "Sequence", "Stage",
+        "Doom", "DoomThreshold", "ClueThreshold",
+        
+        // --- LOCAIS (Frente e Verso) ---
+        "Shroud", "Clues", "LocationShroud", "LocationClues",
+        "ShroudBack", "CluesBack", "Rules2", "Text2",
+        "Victory", "VictoryPoints",
+        
+        // --- INIMIGOS ---
+        "Fight", "Health", "Evade", "Damage", "Horror",
+        "EnemyFight", "EnemyHealth", "EnemyEvade",
+        
+        // --- CAMPOS DE TÍTULO EXTRAS ---
+        "ScenarioTitle", "ScenarioTitle2", "Header", "Footer",
+	    "Outcome", "Resolution", "Aftermath", "ReverseRules", 
+	    "BackRules", "Effect", "AgendaEffect", "ActEffect",
+	    "Description", "Details", "Text1", "Text2"
     ];
-
     println("\n--- 🕵️ TESTANDO CHAVES PROVÁVEIS ---");
     
     for (var i = 0; i < alvos.length; i++) {

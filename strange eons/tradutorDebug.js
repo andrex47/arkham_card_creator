@@ -1,11 +1,8 @@
 importPackage(java.io);
 importPackage(java.nio.file);
 importPackage(arkham.component);
-
 function limparTags(texto) {
-    if (!texto) {
-        return "";
-    }
+    if (!texto) return "";
     return texto.replace(/\[action\]/gi, "<act>")
         .replace(/\[fast\]/gi, "<fre>")
         .replace(/\[free\]/gi, "<fre>")
@@ -21,7 +18,11 @@ function limparTags(texto) {
         .replace(/\[tablet\]/gi, "<tab>")
         .replace(/\[elder_thing\]/gi, "<thi>")
         .replace(/\[auto_fail\]/gi, "<aut>")
-        .replace(/\[elder_sign\]/gi, "<sig>");
+        .replace(/\[elder_sign\]/gi, "<sig>")
+        // --- Tags Nativas do Plugin ---
+        .replace(/\[\[(.*?)\]\]/g, "<t>$1</t>") // Trait nativo
+        .replace(/<b>Objective\.<\/b>/gi, "<obj>") // Transforma o texto de Objetivo na tag
+        .replace(/<b>Forced<\/b>/gi, "<for>");    // Transforma Forçado na tag
 }
 
 function extrairSimbolo(texto, tagJson) {
@@ -126,7 +127,7 @@ function tradutorArkhamFinal() {
                 // Aplicando na Frente
                 comp.setName(c.name);
                 
-                if (tipo === "scenario") {
+               if (tipo === "scenario") {
                     // --- FRENTE (Easy/Standard) ---
                     var txtFrente = c.text || "";
                     s.set("Skull", limparTags(extrairSimbolo(txtFrente, "[skull]")));
@@ -136,15 +137,59 @@ function tradutorArkhamFinal() {
 
                     // --- VERSO (Hard/Expert) ---
                     var txtVerso = c.back_text || "";
-                    s.set("Skull2", limparTags(extrairSimbolo(txtVerso, "[skull]")));
-                    s.set("Cultist2", limparTags(extrairSimbolo(txtVerso, "[cultist]")));
-                    s.set("Tablet2", limparTags(extrairSimbolo(txtVerso, "[tablet]")));
-                    s.set("ElderThing2", limparTags(extrairSimbolo(txtVerso, "[elder_thing]")));
                     
-                    // Se o template usar uma caixa de título para a dificuldade:
+                    // Preenchendo tanto o padrão "Back" quanto o "2" encontrado no teste
+                    var valSkull = limparTags(extrairSimbolo(txtVerso, "[skull]"));
+                    s.set("SkullBack", valSkull);
+                    s.set("Skull2", valSkull);
+
+                    var valCultist = limparTags(extrairSimbolo(txtVerso, "[cultist]"));
+                    s.set("CultistBack", valCultist);
+                    s.set("Cultist2", valCultist);
+
+                    var valTablet = limparTags(extrairSimbolo(txtVerso, "[tablet]"));
+                    s.set("TabletBack", valTablet);
+                    s.set("Tablet2", valTablet);
+
+                    var valElder = limparTags(extrairSimbolo(txtVerso, "[elder_thing]"));
+                    s.set("ElderThingBack", valElder);
+                    s.set("ElderThing2", valElder);
+                    
                     s.set("ScenarioTitle", "Fácil / Normal");
-                    s.set("ScenarioTitle2", "Difícil / Especialista");
-                } else {
+                    s.set("ScenarioTitle2", "Difícil / Especialista");      
+                }// --- TRATAMENTO PARA ATO E AGENDA ---
+               else if (tipo === "agenda") {
+                    // --- FRENTE ---
+                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "1"); // O "a" da Agenda 1a
+                    s.set("Doom", String(c.doom || "0"));
+                    
+                    s.set("AgendaStory", c.flavor || ""); 
+                    s.set("Rules", limparTags(c.text || ""));
+
+                    // --- VERSO (Usando o Bloco A do Back) ---
+                    if (c.back_text || c.back_flavor) {
+                        s.set("TitleBack", c.back_name || ""); // Título grande do verso
+                        
+                        // O plugin divide o verso em Blocos A, B e C
+                        // Vamos colocar tudo no Bloco A para garantir que apareça
+                        s.set("HeaderABack", ""); // Subtítulo opcional do bloco A
+                        s.set("AccentedStoryABack", c.back_flavor || "");
+                        s.set("RulesABack", limparTags(c.back_text || ""));
+                    }
+                } else if (tipo === "act") {
+                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "1");
+                    s.set("Clues", String(c.clues || "0"));
+                    
+                    s.set("ActStory", c.flavor || ""); 
+                    s.set("Rules", limparTags(c.text || ""));
+
+                    if (c.back_text || c.back_flavor) {
+                        s.set("TitleBack", c.back_name || "");
+                        s.set("HeaderABack", "");
+                        s.set("AccentedStoryABack", c.back_flavor || "");
+                        s.set("RulesABack", limparTags(c.back_text || ""));
+                    }
+                }else {
                     s.set("Rules", limparTags(c.text));
                     s.set("Flavor", c.flavor || "");
     
