@@ -33,7 +33,8 @@ function caçaChavesManual() {
         "ScenarioTitle", "ScenarioTitle2", "Header", "Footer",
 	    "Outcome", "Resolution", "Aftermath", "ReverseRules", 
 	    "BackRules", "Effect", "AgendaEffect", "ActEffect",
-	    "Description", "Details", "Text1", "Text2"
+	    "Description", "Details", "Text1", "Text2",
+	    "Encounter","EncounterSet"
     ];
     println("\n--- 🕵️ TESTANDO CHAVES PROVÁVEIS ---");
     

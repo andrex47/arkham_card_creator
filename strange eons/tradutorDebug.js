@@ -1,6 +1,177 @@
 importPackage(java.io);
 importPackage(java.nio.file);
 importPackage(arkham.component);
+
+// ===========================================================================
+// VARIÁVEIS GLOBAIS DE MAPEAMENTO
+// ===========================================================================
+
+var MAPA_CLASSES = {
+    "guardian": "Guardian",
+    "seeker":   "Seeker",
+    "rogue":    "Rogue",
+    "mystic":   "Mystic",
+    "survivor": "Survivor",
+    "neutral":  "Neutral"
+};
+
+var MAPA_ICONES_COLECAO = {
+
+    "core": "CoreSet",
+    "rcore": "CoreSet",
+
+    // Night of the Zealot
+    "tnotz": "NightOfTheZealot",
+    "eotn": "NightOfTheZealot",
+    "lita": "NightOfTheZealot",
+    "rtnotz": "ReturnToTheNightOfTheZealot",
+
+    // Dunwich
+    "dwl": "TheDunwichLegacy",
+    "tmm": "TheDunwichLegacy",
+    "tece": "TheDunwichLegacy",
+    "bota": "TheDunwichLegacy",
+    "uau": "TheDunwichLegacy",
+    "wda": "TheDunwichLegacy",
+    "litas": "TheDunwichLegacy",
+    "rtdwl": "ReturnToTheDunwichLegacy",
+
+    // Carcosa
+    "ptc": "ThePathToCarcosa",
+    "eotp": "ThePathToCarcosa",
+    "uapa": "ThePathToCarcosa",
+    "tuo": "ThePathToCarcosa",
+    "tpm": "ThePathToCarcosa",
+    "bsr": "ThePathToCarcosa",
+    "tdoy": "ThePathToCarcosa",
+    "rtptc": "ReturnToThePathToCarcosa",
+
+    // Forgotten Age
+    "tfa": "TheForgottenAge",
+    "tof": "TheForgottenAge",
+    "tbb": "TheForgottenAge",
+    "hote": "TheForgottenAge",
+    "tcoa": "TheForgottenAge",
+    "tdi": "TheForgottenAge",
+    "sha": "TheForgottenAge",
+    "rttfa": "ReturnToTheForgottenAge",
+
+    // Circle Undone
+    "tcu": "TheCircleUndone",
+    "tsn": "TheCircleUndone",
+    "pas": "TheCircleUndone",
+    "wos": "TheCircleUndone",
+    "wvg": "TheCircleUndone",
+    "fgg": "TheCircleUndone",
+    "uad": "TheCircleUndone",
+    "itd": "TheCircleUndone",
+    "bof": "TheCircleUndone",
+    "bbt": "TheCircleUndone",
+    "rttcu": "ReturnToTheCircleUndone",
+
+    // Investigator Decks
+    "ncho": "NathanielCho",
+    "hwin": "HarveyWalters",
+    "jwin": "JacquelineFine",
+    "wfir": "WinifredHabbamock",
+    "snc": "StellaClark"
+};
+
+var MAPA_ICONES_CENARIO = {
+
+    "core": "CoreSet",
+    "rcore": "RevisedCoreSet",
+
+    // Night of the Zealot
+    "tnotz": "NightOfTheZealot",
+    "eotn": "TheGathering",
+    "lita": "MidnightMasks",
+    "rtnotz": "ReturnToNightOfTheZealot",
+
+    // Dunwich Legacy
+    "dwl": "TheDunwichLegacy",
+    "tmm": "TheMiskatonicMuseum",
+    "tece": "TheEssexCountyExpress",
+    "bota": "BloodOnTheAltar",
+    "uau": "UndimensionedAndUnseen",
+    "wda": "WhereDoomAwaits",
+    "litas": "LostInTimeAndSpace",
+    "rtdwl": "ReturnToTheDunwichLegacy",
+
+    // Path to Carcosa
+    "ptc": "ThePathToCarcosa",
+    "eotp": "EchoesOfThePast",
+    "uapa": "UnspeakableOath",
+    "tuo": "TheUnspeakableOath",
+    "tpm": "ThePallidMask",
+    "bsr": "BlackStarsRise",
+    "tdoy": "DimCarcosa",
+    "rtptc": "ReturnToThePathToCarcosa",
+
+    // Forgotten Age
+    "tfa": "TheForgottenAge",
+    "tof": "ThreadsOfFate",
+    "tbb": "TheBoundaryBeyond",
+    "hote": "HeartOfTheElders",
+    "tcoa": "TheCityOfArchives",
+    "tdi": "TheDepthsOfYoth",
+    "sha": "ShatteredAeons",
+    "rttfa": "ReturnToTheForgottenAge",
+
+    // Circle Undone
+    "tcu": "TheCircleUndone",
+    "tsn": "TheSecretName",
+    "pas": "TheWagesOfSin",
+    "wos": "TheWagesOfSin",
+    "wvg": "ForTheGreaterGood",
+    "fgg": "ForTheGreaterGood",
+    "uad": "UnionAndDisillusion",
+    "itd": "InTheClutchesOfChaos",
+    "icc": "InTheClutchesOfChaos",
+    "bof": "BeforeTheBlackThrone",
+    "bbt": "BeforeTheBlackThrone",
+    "rttcu": "ReturnToTheCircleUndone",
+
+    // Dream Eaters
+    "tde": "TheDreamEaters",
+    "sfk": "SearchForKadath",
+    "tsh": "AThousandShapesOfHorror",
+    "dsm": "DarkSideOfTheMoon",
+    "pnr": "PointOfNoReturn",
+    "wgd": "WhereTheGodsDwell",
+    "woc": "WeaverOfTheCosmos",
+    "tdcc": "DreamEatersCampaign",
+    "tdcp": "DreamEatersInvestigators",
+
+    // Innsmouth Conspiracy
+    "tic": "TheInnsmouthConspiracy",
+    "itdd": "InTooDeep",
+    "tdg": "TheDevilReef",
+    "hoth": "HorrorInHighGear",
+    "dre": "AThousandShapesOfHorror",
+    "lod": "TheLairOfDagon",
+    "iotv": "IntoTheMaelstrom",
+
+    // Edge of the Earth
+    "eote": "EdgeOfTheEarth",
+    "eoep": "EdgeOfTheEarthInvestigators",
+    "eoec": "EdgeOfTheEarthCampaign",
+
+    // Scarlet Keys
+    "tsk": "TheScarletKeys",
+    "tskp": "TheScarletKeysInvestigators",
+    "tskc": "TheScarletKeysCampaign",
+
+    // Hemlock Vale
+    "fhv": "TheFeastOfHemlockVale",
+    "fhvp": "HemlockValeInvestigators",
+    "fhvc": "HemlockValeCampaign",
+    "tftbw": "TheFeastOfHemlockValeCampaign"
+};
+// ===========================================================================
+// FUNÇÕES UTILITÁRIAS
+// ===========================================================================
+
 function limparTags(texto) {
     if (!texto) return "";
     return texto.replace(/\[action\]/gi, "<act>")
@@ -19,66 +190,25 @@ function limparTags(texto) {
         .replace(/\[elder_thing\]/gi, "<thi>")
         .replace(/\[auto_fail\]/gi, "<aut>")
         .replace(/\[elder_sign\]/gi, "<sig>")
-        // --- Tags Nativas do Plugin ---
-        .replace(/\[\[(.*?)\]\]/g, "<t>$1</t>") // Trait nativo
-        .replace(/<b>Objective\.<\/b>/gi, "<obj>") // Transforma o texto de Objetivo na tag
-        .replace(/<b>Forced<\/b>/gi, "<for>");    // Transforma Forçado na tag
+        .replace(/\[\[(.*?)\]\]/g, "<t>$1</t>") 
+        .replace(/<b>Objective\.<\/b>/gi, "<obj>") 
+        .replace(/<b>Forced<\/b>/gi, "<for>");   
 }
 
 function extrairSimbolo(texto, tagJson) {
-    if (!texto) {
-        return "";
-    }
-    // Esta regex busca a tag (ex: [skull]) e pega tudo até o próximo [ ou fim da linha
+    if (!texto) return "";
     var regex = new RegExp("\\" + tagJson + "[:\\s]*([^\\n\\[]+)", "i");
     var match = texto.match(regex);
     return match ? match[1].trim() : "";
 }
 
-function tradutorArkhamFinal() {
-    // ⚠️ AJUSTE OS CAMINHOS ABAIXO
-    var caminhoPack = "C:\\Users\\andre\\PhpstormProjects\\tradutor_arkham\\campanhas\\02_Legado_de_Dunwich\\O_Expresso_do_Condado_de_Essex";
-    
-    // --- DICIONÁRIO DE TRADUÇÃO: PACK -> ÍCONE DO CICLO NO STRANGE EONS ---
-    var MAPA_ICONES_COLECAO = {
-        // CORE
-        "core": "CoreSet", "rcore": "CoreSet",
-        
-        // NOITE DO FANÁTICO (Standard: CoreSet ou NightOfTheZealot)
-        "tnotz": "NightOfTheZealot", "eotn": "NightOfTheZealot", 
-        "ptc": "NightOfTheZealot", "lita": "NightOfTheZealot",
-        "rtnotz": "ReturnToTheNightOfTheZealot",
-        
-        // LEGADO DE DUNWICH (Onde tece vira DunwichLegacy)
-        "dwl": "TheDunwichLegacy", "tmm": "TheDunwichLegacy", 
-        "tece": "TheDunwichLegacy", "bota": "TheDunwichLegacy", 
-        "uau": "TheDunwichLegacy", "wda": "TheDunwichLegacy", 
-        "litas": "TheDunwichLegacy", "rtdwl": "ReturnToTheDunwichLegacy",
-        
-        // CAMINHO PARA CARCOSA
-        "ptc": "ThePathToCarcosa", "eotp": "ThePathToCarcosa", 
-        "uapa": "ThePathToCarcosa", "tuo": "ThePathToCarcosa", 
-        "tpm": "ThePathToCarcosa", "bsr": "ThePathToCarcosa", 
-        "tdoy": "ThePathToCarcosa", "rtptc": "ReturnToThePathToCarcosa",
-        
-        // ERA DO ESQUECIMENTO
-        "tfa": "TheForgottenAge", "tof": "TheForgottenAge", 
-        "tbb": "TheForgottenAge", "hote": "TheForgottenAge", 
-        "tcoa": "TheForgottenAge", "tdi": "TheForgottenAge", 
-        "sha": "TheForgottenAge", "rttfa": "ReturnToTheForgottenAge",
-        
-        // O CÍRCULO DESFEITO
-        "tcu": "TheCircleUndone", "tsn": "TheCircleUndone", 
-        "pas": "TheCircleUndone", "wos": "TheCircleUndone", 
-        "wvg": "TheCircleUndone", "fgg": "TheCircleUndone", 
-        "uad": "TheCircleUndone", "itd": "TheCircleUndone", 
-        "bof": "TheCircleUndone", "bbt": "TheCircleUndone",
-        
-        // DECKS INICIAIS
-        "ncho": "NathanielCho", "hwin": "HarveyWalters", 
-        "jwin": "JacquelineFine", "wfir": "WinifredHabbamock", "snc": "StellaClark"
-    };
+// ===========================================================================
+// FUNÇÃO PRINCIPAL
+// ===========================================================================
 
+function tradutorArkhamFinal() {
+    var caminhoPack = "C:\\Users\\andre\\PhpstormProjects\\arkham_card_creator\\campanhas\\02_Legado_de_Dunwich\\O_Expresso_do_Condado_de_Essex";
+    
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
         
@@ -95,13 +225,11 @@ function tradutorArkhamFinal() {
             "location": new File(pastaRaiz, "Template_Location.eon"),
             "agenda": new File(pastaRaiz, "Template_Agenda.eon"),
             "act": new File(pastaRaiz, "Template_Act.eon"),
-            "scenario": new File(pastaRaiz, "Template_Scenario.eon") // <-- ADICIONADO
+            "scenario": new File(pastaRaiz, "Template_Scenario.eon")
         };
 
         var pastaExport = new File(pastaPack, "Exportados");
-        if (!pastaExport.exists()) {
-            pastaExport.mkdir();
-        }
+        if (!pastaExport.exists()) pastaExport.mkdir();
 
         var ResourceKit = Packages.resources.ResourceKit;
         var arquivos = pastaPack.listFiles();
@@ -114,9 +242,7 @@ function tradutorArkhamFinal() {
                 var bytes = Files.readAllBytes(arquivoAtual.toPath());
                 var jsonTexto = new java.lang.String(bytes, "UTF-8");
                 var c = JSON.parse(jsonTexto);
-                if (Array.isArray(c)) {
-                    c = c[0];
-                }
+                if (Array.isArray(c)) c = c[0];
 
                 var tipo = (c.type_code || "asset").toLowerCase();
                 var arquivoMolde = moldes[tipo] || moldes["asset"];
@@ -124,124 +250,93 @@ function tradutorArkhamFinal() {
                 var s = comp.getSettings();
 
                 // --- 1. IDENTIFICAÇÃO E TEXTOS ---
-                // Aplicando na Frente
                 comp.setName(c.name);
                 
-               if (tipo === "scenario") {
-                    // --- FRENTE (Easy/Standard) ---
+                if (tipo === "scenario") {
                     var txtFrente = c.text || "";
                     s.set("Skull", limparTags(extrairSimbolo(txtFrente, "[skull]")));
                     s.set("Cultist", limparTags(extrairSimbolo(txtFrente, "[cultist]")));
                     s.set("Tablet", limparTags(extrairSimbolo(txtFrente, "[tablet]")));
                     s.set("ElderThing", limparTags(extrairSimbolo(txtFrente, "[elder_thing]")));
 
-                    // --- VERSO (Hard/Expert) ---
                     var txtVerso = c.back_text || "";
-                    
-                    // Preenchendo tanto o padrão "Back" quanto o "2" encontrado no teste
                     var valSkull = limparTags(extrairSimbolo(txtVerso, "[skull]"));
-                    s.set("SkullBack", valSkull);
-                    s.set("Skull2", valSkull);
-
+                    s.set("SkullBack", valSkull); s.set("Skull2", valSkull);
                     var valCultist = limparTags(extrairSimbolo(txtVerso, "[cultist]"));
-                    s.set("CultistBack", valCultist);
-                    s.set("Cultist2", valCultist);
-
+                    s.set("CultistBack", valCultist); s.set("Cultist2", valCultist);
                     var valTablet = limparTags(extrairSimbolo(txtVerso, "[tablet]"));
-                    s.set("TabletBack", valTablet);
-                    s.set("Tablet2", valTablet);
-
+                    s.set("TabletBack", valTablet); s.set("Tablet2", valTablet);
                     var valElder = limparTags(extrairSimbolo(txtVerso, "[elder_thing]"));
-                    s.set("ElderThingBack", valElder);
-                    s.set("ElderThing2", valElder);
+                    s.set("ElderThingBack", valElder); s.set("ElderThing2", valElder);
                     
                     s.set("ScenarioTitle", "Fácil / Normal");
                     s.set("ScenarioTitle2", "Difícil / Especialista");      
-                }// --- TRATAMENTO PARA ATO E AGENDA ---
-               else if (tipo === "agenda") {
-                    // --- FRENTE ---
-                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "1"); // O "a" da Agenda 1a
-                    s.set("Doom", String(c.doom || "0"));
-                    
-                    s.set("AgendaStory", c.flavor || ""); 
-                    s.set("Rules", limparTags(c.text || ""));
-
-                    // --- VERSO (Usando o Bloco A do Back) ---
-                    if (c.back_text || c.back_flavor) {
-                        s.set("TitleBack", c.back_name || ""); // Título grande do verso
-                        
-                        // O plugin divide o verso em Blocos A, B e C
-                        // Vamos colocar tudo no Bloco A para garantir que apareça
-                        s.set("HeaderABack", ""); // Subtítulo opcional do bloco A
-                        s.set("AccentedStoryABack", c.back_flavor || "");
-                        s.set("RulesABack", limparTags(c.back_text || ""));
-                    }
-                } else if (tipo === "act") {
-                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "1");
+                } 
+                else if (tipo === "act") {
+                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "a");
                     s.set("Clues", String(c.clues || "0"));
-                    
                     s.set("ActStory", c.flavor || ""); 
                     s.set("Rules", limparTags(c.text || ""));
-
                     if (c.back_text || c.back_flavor) {
                         s.set("TitleBack", c.back_name || "");
-                        s.set("HeaderABack", "");
                         s.set("AccentedStoryABack", c.back_flavor || "");
                         s.set("RulesABack", limparTags(c.back_text || ""));
                     }
-                }else {
+                } 
+                else if (tipo === "agenda") {
+                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "a");
+                    s.set("Doom", String(c.doom || "0"));
+                    s.set("AgendaStory", c.flavor || ""); 
+                    s.set("Rules", limparTags(c.text || ""));
+                    if (c.back_text || c.back_flavor) {
+                        s.set("TitleBack", c.back_name || "");
+                        s.set("AccentedStoryABack", c.back_flavor || "");
+                        s.set("RulesABack", limparTags(c.back_text || ""));
+                    }
+                } 
+                else {
                     s.set("Rules", limparTags(c.text));
-                    s.set("Flavor", c.flavor || "");
-    
-                    // Aplicando no Verso (Se existir)
                     if (c.back_text || c.back_name || c.back_flavor) {
-                        if (c.back_name) {
-                            s.set("BackName", c.back_name); // Alguns templates usam isso
-                        }
-                        
-                        // Tentativa de chaves comuns para o verso no Strange Eons
+                        if (c.back_name) s.set("BackName", c.back_name);
                         var regrasVerso = limparTags(c.back_text);
                         s.set("BackRules", regrasVerso);
-                        s.set("RulesBack", regrasVerso); // Backup para outros templates
-                        
+                        s.set("RulesBack", regrasVerso);
                         s.set("BackFlavor", c.back_flavor || "");
                     }
-                    if (c.subname) {
-                        s.set("Subtitle", c.subname);
-                    }
+                    if (c.subname) s.set("Subtitle", c.subname);
                     s.set("Traits", c.traits || "");
                     s.set("Flavor", c.flavor || "");
                 }
                 
-                // --- 1.5 LÓGICA DE CLASSE (CARDCLASS) ---
-                var mapaClasses = {
-                    "guardian": "Guardian",
-                    "seeker":   "Seeker",
-                    "rogue":    "Rogue",
-                    "mystic":   "Mystic",
-                    "survivor": "Survivor",
-                    "neutral":  "Neutral"
-                };
-                // Pega a classe do JSON e converte para o padrão do Strange Eons
-                var classeFinal = mapaClasses[c.faction_code.toLowerCase()] || "Neutral";
+                // --- 1.5 LÓGICA DE CLASSE (USANDO O MAPA GLOBAL) ---
+                var classeFinal = (c.faction_code) ? MAPA_CLASSES[c.faction_code.toLowerCase()] || "Neutral" : "Neutral";
                 s.set("CardClass", classeFinal);
 
-                // --- 2. RODAPÉ E COLEÇÃO ---
-                var packCode = c.pack_code;
-                
-                // Traduz para o ícone do ciclo (ex: "TheDunwichLegacy")
-                var iconeColecao = MAPA_ICONES_COLECAO[packCode] || "CustomCollection";
-                s.set("Collection", iconeColecao);
+				// --- 2. RODAPÉ E COLEÇÃO (DIFERENCIANDO COLEÇÃO DE CENÁRIO) ---
 
-                // Artista, Copyright e Número
-                s.set("Artist", c.illustrator || "");
-                s.set("Copyright", "<i>arkhamBR</i>");
-                
-                if (c.position) {
-                    s.set("CollectionNumber", String(c.position));
-                }
+			// 1. Ícone de Coleção (Obrigatório para TODAS as cartas)
+			// Usa o MAPA_ICONES_COLECAO
+			s.set("Collection", MAPA_ICONES_COLECAO[c.pack_code] || "CustomCollection");
+			if (c.position) s.set("CollectionNumber", String(c.position));
+			
+			// 2. Ícone de Cenário (Apenas para tipos específicos)
+			// Usa o MAPA_ICONES_CENARIO
+			if (tipo === "scenario" || tipo === "act" || tipo === "agenda") {
+			    // Se o JSON tiver encounter_code (ex: "eotn"), usamos ele. 
+			    // Se não tiver, usamos o pack_code (ex: "tece").
+			    var refCenario = c.pack_code;
+			    
+			    if (refCenario) {
+			        var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
+			        s.set("Encounter", nomeIconeCenario);
+			    }
+			}
+			
+			// 3. Informações de Rodapé
+			s.set("Artist", c.illustrator || "");
+			s.set("Copyright", "<i>arkhamBR</i>");
 
-                // --- 3. LÓGICA DE ÍCONES DE HABILIDADE (SLOTS) ---
+                // --- 3. LÓGICA DE ÍCONES DE HABILIDADE ---
                 if (tipo === "skill") {
                     var listaIcones = [];
                     var mapaSkills = [
@@ -251,53 +346,33 @@ function tradutorArkhamFinal() {
                         { campo: "skill_agility",   nome: "Agility" },
                         { campo: "skill_wild",      nome: "Wild" }
                     ];
-            
                     for (var i = 0; i < mapaSkills.length; i++) {
                         var quantidade = c[mapaSkills[i].campo] || 0;
-                        for (let n = 0; n < quantidade; n++) {
-                            listaIcones.push(mapaSkills[i].nome);
-                        }
+                        for (var n = 0; n < quantidade; n++) listaIcones.push(mapaSkills[i].nome);
                     }
-            
                     for (var slot = 1; slot <= 6; slot++) {
-                        var valor = (slot <= listaIcones.length) ? listaIcones[slot - 1] : "None";
-                        s.set("Skill" + slot, valor);
+                        s.set("Skill" + slot, (slot <= listaIcones.length) ? listaIcones[slot - 1] : "None");
                     }
                 }
 
-                // --- 4. CUSTOS, XP E ATRIBUTOS ESPECÍFICOS ---
-                if (c.xp != null) {
-                    s.set("Level", String(c.xp));
-                }
-                if (c.cost != null) {
-                    s.set("ResourceCost", String(c.cost));
-                }
+                // --- 4. ATRIBUTOS ESPECÍFICOS ---
+                if (c.xp != null) s.set("Level", String(c.xp));
+                if (c.cost != null) s.set("ResourceCost", String(c.cost));
                 
                 if (tipo === "location") {
-                    if (c.shroud != null) {
-                        s.set("Shroud", String(c.shroud));
-                    }
-                    if (c.clues != null) {
-                        s.set("Clues", String(c.clues));
-                    }
+                    if (c.shroud != null) s.set("Shroud", String(c.shroud));
+                    if (c.clues != null) s.set("Clues", String(c.clues));
                 }
                 
                 if (tipo === "enemy") {
-                    if (c.enemy_fight != null) {
-                        s.set("Fight", String(c.enemy_fight));
-                    }
-                    if (c.health != null) {
-                        s.set("Health", String(c.health));
-                    }
-                    if (c.enemy_evade != null) {
-                        s.set("Evade", String(c.enemy_evade));
-                    }
+                    if (c.enemy_fight != null) s.set("Fight", String(c.enemy_fight));
+                    if (c.health != null) s.set("Health", String(c.health));
+                    if (c.enemy_evade != null) s.set("Evade", String(c.enemy_evade));
                 }
 
                 // --- SALVAMENTO ---
                 var nomeArquivo = c.code + " - " + c.name.replace(/[<>:"/\\|?*]/g, "") + ".eon";
-                var destino = new File(pastaExport, nomeArquivo);
-                ResourceKit.writeGameComponentToFile(destino, comp);
+                ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
                 cartasCriadas++;
                 println("✅ Gerada: " + nomeArquivo);
             }
