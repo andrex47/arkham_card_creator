@@ -399,12 +399,32 @@ function tradutorArkhamFinal() {
                     if (c.health != null) s.set("Health", String(c.health));
                     if (c.enemy_evade != null) s.set("Evade", String(c.enemy_evade));
                 }
+				// ===========================================================================
+                // NOVO: LÓGICA DE QUANTIDADE, ITERAÇÃO DE ENCONTRO E SALVAMENTO
+                // ===========================================================================
+                
+                var qtd = c.quantity || 1;
+                
+                for (var i = 0; i < qtd; i++) {
+                    // Se for carta de encontro com posição, somamos o index atual (i) à posição base
+                    if (c.encounter_position) {
+                        var posicaoBase = parseInt(c.encounter_position);
+                        var posicaoAtualizada = posicaoBase + i;
+                        s.set("EncounterNumber", String(posicaoAtualizada));
+                    }
 
-                // --- SALVAMENTO ---
-                var nomeArquivo = c.code + " - " + c.name.replace(/[<>:"/\\|?*]/g, "") + ".eon";
-                ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
-                cartasCriadas++;
-                println("✅ Gerada: " + nomeArquivo);
+                    // Gerar nome de arquivo único para não sobrescrever as cópias
+                    // Exemplo: "02166_1 - Nome.eon", "02166_2 - Nome.eon"
+                    var sufixo = (qtd > 1) ? "_" + (i + 1) : "";
+                    var nomeArquivo = c.code + sufixo + " - " + c.name.replace(/[<>:"/\\|?*]/g, "") + ".eon";
+
+                    ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
+                    cartasCriadas++;
+                    
+                    var logEncontro = c.encounter_position ? " [Encontro: " + s.get("EncounterNumber") + "]" : "";
+                    println("✅ Gerada: " + nomeArquivo + logEncontro);
+                }
+                // ===========================================================================
             }
         }
         alert("Fábrica Concluída!\n" + cartasCriadas + " cartas exportadas.");
