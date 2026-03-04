@@ -212,6 +212,7 @@ function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
         
+        
         var pastaPack = new File(caminhoPack);
         var pastaRaiz = pastaPack.getParentFile().getParentFile().getParentFile();
         
@@ -233,8 +234,29 @@ function tradutorArkhamFinal() {
 
         var ResourceKit = Packages.resources.ResourceKit;
         var arquivos = pastaPack.listFiles();
-        var cartasCriadas = 0;
+        
+        // --- PASSO 0: PRE-SCAN PARA DESCOBRIR TOTAIS DE ENCONTRO ---
+        var mapaTotais = {};
+        for (var i = 0; i < arquivos.length; i++) {
+            var arq = arquivos[i];
+            if (arq.isFile() && arq.getName().toLowerCase().endsWith(".json")) {
+                var b = Files.readAllBytes(arq.toPath());
+                var jt = new java.lang.String(b, "UTF-8");
+                var card = JSON.parse(jt);
+                if (Array.isArray(card)) card = card[0];
 
+                // Usamos o encounter_code (ou pack_code se não houver) como chave
+                var chave = card.encounter_code || card.pack_code;
+                if (chave && card.encounter_position) {
+                    if (!mapaTotais[chave] || card.encounter_position > mapaTotais[chave]) {
+                        mapaTotais[chave] = card.encounter_position;
+                    }
+                }
+            }
+        }
+        println("📊 Totais de Encontro mapeados: " + JSON.stringify(mapaTotais));
+        
+        var cartasCriadas = 0;
         for (var f = 0; f < arquivos.length; f++) {
             var arquivoAtual = arquivos[f];
             if (arquivoAtual.isFile() && arquivoAtual.getName().toLowerCase().endsWith(".json")) {
@@ -312,29 +334,37 @@ function tradutorArkhamFinal() {
                 var classeFinal = (c.faction_code) ? MAPA_CLASSES[c.faction_code.toLowerCase()] || "Neutral" : "Neutral";
                 s.set("CardClass", classeFinal);
 
-				// --- 2. RODAPÉ E COLEÇÃO (DIFERENCIANDO COLEÇÃO DE CENÁRIO) ---
+				// --- 2. RODAPÉ E COLEÇÃO (COM NÚMERO DE ENCONTRO) ---
+                
+                // 1. Ícone de Coleção (Canto inferior direito)
+                s.set("Collection", MAPA_ICONES_COLECAO[c.pack_code] || "CustomCollection");
+                if (c.position) s.set("CollectionNumber", String(c.position));
 
-			// 1. Ícone de Coleção (Obrigatório para TODAS as cartas)
-			// Usa o MAPA_ICONES_COLECAO
-			s.set("Collection", MAPA_ICONES_COLECAO[c.pack_code] || "CustomCollection");
-			if (c.position) s.set("CollectionNumber", String(c.position));
-			
-			// 2. Ícone de Cenário (Apenas para tipos específicos)
-			// Usa o MAPA_ICONES_CENARIO
-			if (tipo === "scenario" || tipo === "act" || tipo === "agenda") {
-			    // Se o JSON tiver encounter_code (ex: "eotn"), usamos ele. 
-			    // Se não tiver, usamos o pack_code (ex: "tece").
-			    var refCenario = c.pack_code;
-			    
-			    if (refCenario) {
-			        var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
-			        s.set("Encounter", nomeIconeCenario);
-			    }
-			}
-			
-			// 3. Informações de Rodapé
-			s.set("Artist", c.illustrator || "");
-			s.set("Copyright", "<i>arkhamBR</i>");
+                // 2. Ícone de Encontro e Números (8/10)
+                // Se a carta tem posição de encontro, ela merece o ícone e a numeração
+                if (c.encounter_position) {
+                    // Ícone (conforme seu ajuste que deu certo usando "Encounter")
+                    var refCenario = c.pack_code;
+                    var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
+                    s.set("Encounter", nomeIconeCenario);
+
+                    // Numeração: "EncounterSetNumber" é o atual, "EncounterSetCount" é o total
+                    s.set("EncounterNumber", String(c.encounter_position));
+                    
+                    var chaveContagem = c.encounter_code || c.pack_code;
+                    if (mapaTotais[chaveContagem]) {
+                        s.set("EncounterTotal", String(mapaTotais[chaveContagem]));
+                    }
+                } 
+                // Fallback para Scenario/Act/Agenda que as vezes não tem posição mas tem ícone
+                else if (tipo === "scenario" || tipo === "act" || tipo === "agenda") {
+                    var refCenario = c.pack_code;
+                    var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
+                    s.set("Encounter", nomeIconeCenario);
+                }
+
+                s.set("Artist", c.illustrator || "");
+                s.set("Copyright", "<i>arkhamBR</i>");
 
                 // --- 3. LÓGICA DE ÍCONES DE HABILIDADE ---
                 if (tipo === "skill") {
