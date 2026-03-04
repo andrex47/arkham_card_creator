@@ -14,6 +14,25 @@ var MAPA_CLASSES = {
     "survivor": "Survivor",
     "neutral":  "Neutral"
 };
+var MAPA_SLOTS = {
+    "hand": "1 Hand",
+    "hand x2": "2 Hand", // Caso o plugin use o ícone que já mostra duas mãos
+    "arcane": "1 Arcane",
+    "arcane x2": "2 Arcane", // Caso o plugin use o ícone que já mostra dois arcanos
+    "accessory": "Accessory",
+    "body": "Body",
+    "ally": "Ally",
+    "tarot": "Tarot",
+    "none": "None"
+};
+
+var MAPA_SKILLS = [
+    { json: "skill_willpower", eons: "Willpower" },
+    { json: "skill_intellect", eons: "Intellect" },
+    { json: "skill_combat",    eons: "Combat" },
+    { json: "skill_agility",   eons: "Agility" },
+    { json: "skill_wild",      eons: "Wild" }
+];
 
 var MAPA_ICONES_COLECAO = {
 
@@ -207,7 +226,7 @@ function extrairSimbolo(texto, tagJson) {
 // ===========================================================================
 
 function tradutorArkhamFinal() {
-    var caminhoPack = "C:\\Users\\andre\\PhpstormProjects\\arkham_card_creator\\campanhas\\02_Legado_de_Dunwich\\O_Expresso_do_Condado_de_Essex";
+    var caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/02_Legado_de_Dunwich/O_Expresso_do_Condado_de_Essex";
     
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
@@ -316,19 +335,101 @@ function tradutorArkhamFinal() {
                         s.set("RulesABack", limparTags(c.back_text || ""));
                     }
                 } 
+                else if (tipo === "location") {
+				    // 1. Atributos de Jogo
+				    if (c.shroud != null) s.set("Shroud", String(c.shroud));
+				    
+				    // Lógica de Pistas (Valor + ícone de multiplicador se necessário)
+				    if (c.clues != null) {
+				        var valorPistas = String(c.clues);
+				        if (c.clues_fixed === false || c.clues_fixed === undefined) {
+				            valorPistas += " <per>";
+				        }
+				        s.set("Clues", valorPistas);
+				    }
+				
+				    // 2. Ícones de Conexão
+				    if (c.location_symbol) s.set("LocationIcon", c.location_symbol);
+				    if (c.location_connections) {
+				        var lista = Array.isArray(c.location_connections) ? c.location_connections.join(", ") : c.location_connections;
+				        s.set("ConnectionIcons", lista);
+				    }
+				
+				    // 3. Textos da Frente (Lado com ???)
+				    s.set("Rules", limparTags(c.text || ""));
+				    s.set("Flavor", c.flavor || "");
+				
+				    // 4. Textos do Verso (Lado Revelado)
+				    if (c.back_name) s.set("TitleBack", c.back_name);
+				    if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
+				    if (c.back_flavor) s.set("FlavorBack", c.back_flavor);
+				} // ======================================================
+				// BLOCO: INIMIGOS (ENEMY)
+				// ======================================================
+				else if (tipo === "enemy") {
+				    // 1. Atributos de Combate (O "Disco" de Estatísticas)
+				    if (c.enemy_fight != null) s.set("Fight", String(c.enemy_fight));
+				    
+				    // Vida: Se for por investigador, adicionamos o ícone <per>
+				    if (c.health != null) {
+				        var valorVida = String(c.health);
+				        if (c.health_per_investigator === true) {
+				            valorVida += " <per>";
+				        }
+				        s.set("Health", valorVida);
+				    }
+				    
+				    if (c.enemy_evade != null) s.set("Evade", String(c.enemy_evade));
+				
+				    // 2. Dano e Horror (Quanto o inimigo bate)
+				    if (c.enemy_damage != null) s.set("Damage", String(c.enemy_damage));
+				    if (c.enemy_horror != null) s.set("Horror", String(c.enemy_horror));
+				
+				    // 3. Textos e Subtipo
+				    s.set("Traits", c.traits || "");
+				    s.set("Rules", limparTags(c.text || ""));
+				    s.set("Flavor", c.flavor || "");
+				
+				    // Se houver texto no verso (ex: inimigos de dupla face)
+				    if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
+				}
+				// ======================================================
                 else {
-                    s.set("Rules", limparTags(c.text));
-                    if (c.back_text || c.back_name || c.back_flavor) {
-                        if (c.back_name) s.set("BackName", c.back_name);
-                        var regrasVerso = limparTags(c.back_text);
-                        s.set("BackRules", regrasVerso);
-                        s.set("RulesBack", regrasVerso);
-                        s.set("BackFlavor", c.back_flavor || "");
-                    }
-                    if (c.subname) s.set("Subtitle", c.subname);
-                    s.set("Traits", c.traits || "");
-                    s.set("Flavor", c.flavor || "");
-                }
+				    // --- TEXTOS E ATRIBUTOS GERAIS ---
+				    s.set("Traits", c.traits || "");
+				    s.set("Rules", limparTags(c.text || ""));
+				    s.set("Flavor", c.flavor || "");
+				    if (c.subname) s.set("Subtitle", c.subname);
+				    
+				    // Nível e Custo (como na sua Faca 02152)
+				    if (c.xp != null) s.set("Level", String(c.xp));
+				    if (c.cost != null) s.set("ResourceCost", String(c.cost));
+				
+			    }
+				
+				    // --- LÓGICA DE ÍCONES DE HABILIDADE (PARA TODAS AS CARTAS NO ELSE) ---
+				    var listaIcones = [];
+				    for (var i = 0; i < MAPA_SKILLS.length; i++) {
+				        var qtd = c[MAPA_SKILLS[i].json] || 0;
+				        for (var n = 0; n < qtd; n++) {
+				            listaIcones.push(MAPA_SKILLS[i].eons);
+				        }
+				    }
+				
+				    // O Strange Eons Arkham Horror Lacerda/DIY costuma ter 6 slots de ícones
+				    for (var slotIdx = 1; slotIdx <= 6; slotIdx++) {
+				        var valorIcone = (slotIdx <= listaIcones.length) ? listaIcones[slotIdx - 1] : "None";
+				        s.set("Skill" + slotIdx, valorIcone);
+				    }
+				
+				    // --- TRATAMENTO DE VERSO PARA CARTAS JOGADOR / FRAQUEZAS ---
+				    if (c.back_text || c.back_name) {
+				        if (c.back_name) s.set("BackName", c.back_name);
+				        var regrasVerso = limparTags(c.back_text || "");
+				        s.set("BackRules", regrasVerso);
+				        s.set("RulesBack", regrasVerso);
+				    }
+				}
                 
                 // --- 1.5 LÓGICA DE CLASSE (USANDO O MAPA GLOBAL) ---
                 var classeFinal = (c.faction_code) ? MAPA_CLASSES[c.faction_code.toLowerCase()] || "Neutral" : "Neutral";
@@ -366,24 +467,44 @@ function tradutorArkhamFinal() {
                 s.set("Artist", c.illustrator || "");
                 s.set("Copyright", "<i>arkhamBR</i>");
 
-                // --- 3. LÓGICA DE ÍCONES DE HABILIDADE ---
-                if (tipo === "skill") {
-                    var listaIcones = [];
-                    var mapaSkills = [
-                        { campo: "skill_willpower", nome: "Willpower" },
-                        { campo: "skill_intellect", nome: "Intellect" },
-                        { campo: "skill_combat",    nome: "Combat" },
-                        { campo: "skill_agility",   nome: "Agility" },
-                        { campo: "skill_wild",      nome: "Wild" }
-                    ];
-                    for (var i = 0; i < mapaSkills.length; i++) {
-                        var quantidade = c[mapaSkills[i].campo] || 0;
-                        for (var n = 0; n < quantidade; n++) listaIcones.push(mapaSkills[i].nome);
-                    }
-                    for (var slot = 1; slot <= 6; slot++) {
-                        s.set("Skill" + slot, (slot <= listaIcones.length) ? listaIcones[slot - 1] : "None");
-                    }
-                }
+                
+                // --- NOVO: LÓGICA DE SLOTS PARA ASSETS (CORRIGIDA) ---
+			    // --- LÓGICA DE SLOTS (USANDO REAL_SLOT) ---
+				    if (tipo === "asset") {
+			        var s1 = "None";
+			        var s2 = "None";
+			
+			        var slotBruto = (c.real_slot || c.slot || "");
+			        
+			        if (slotBruto !== "") {
+			            // Dividimos a string caso existam dois slots (ex: "Hand. Arcane")
+			            // O regex /[.,;]+/ separa por ponto, vírgula ou ponto e vírgula
+			            var partes = slotBruto.toLowerCase().split(/[.,;]+/);
+			            
+			            // Tratamos a primeira parte -> Slot 1
+			            if (partes.length >= 1) {
+			                var termo1 = partes[0].trim();
+			                s1 = MAPA_SLOTS[termo1] || "None";
+			            }
+			            
+			            // Tratamos a segunda parte -> Slot 2 (Ex: Lâmina Cantada)
+			            if (partes.length >= 2) {
+			                var termo2 = partes[1].trim();
+			                s2 = MAPA_SLOTS[termo2] || "None";
+			            }
+			            
+			            // Lógica Especial: Se o JSON diz apenas "Hand x2" e não dividiu em partes,
+			            // mas o plugin do Eons prefere dois ícones de "1 Hand" separados:
+			            if (s1 === "2 Hand" && s2 === "None") {
+			                // Descomente as linhas abaixo se preferir dois ícones individuais:
+			                // s1 = "1 Hand"; s2 = "1 Hand"; 
+			            }
+			        }
+			
+			        s.set("Slot", s1);
+			        s.set("Slot2", s2);
+			        
+			        if (s1 !== "None") println("   🗃️ Slots definidos: " + s1 + " / " + s2);
 
                 // --- 4. ATRIBUTOS ESPECÍFICOS ---
                 if (c.xp != null) s.set("Level", String(c.xp));

@@ -34,7 +34,7 @@ function caçaChavesManual() {
 	    "Outcome", "Resolution", "Aftermath", "ReverseRules", 
 	    "BackRules", "Effect", "AgendaEffect", "ActEffect",
 	    "Description", "Details", "Text1", "Text2",
-	    "Encounter","EncounterSet","EncounterNumber","EncounterPosition","EncounterCount"
+	    "Encounter","EncounterSet","EncounterNumber","EncounterPosition","EncounterCount","Slot1","Slot2","Slot"
     ];
     println("\n--- 🕵️ TESTANDO CHAVES PROVÁVEIS ---");
     
