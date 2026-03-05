@@ -221,6 +221,38 @@ function extrairSimbolo(texto, tagJson) {
     return match ? match[1].trim() : "";
 }
 
+function obterImagem(codigo, pastaDestino) {
+    // 1. Define o caminho esperado do arquivo (sempre .png vindo do ArkhamDB)
+    var arquivoLocal = new java.io.File(pastaDestino, codigo + ".png");
+
+    // 2. MECANISMO INTELIGENTE: Se já existe, retorna o caminho na hora
+    if (arquivoLocal.exists()) {
+        // println("   📦 Usando cache local: " + codigo);
+        return arquivoLocal.getAbsolutePath();
+    }
+
+    // 3. Se não existe, tenta o download
+    try {
+        var urlString = "https://arkhamdb.com/bundles/cards/" + codigo + ".png";
+        var url = new java.net.URL(urlString);
+        var conexao = url.openConnection();
+        conexao.setRequestProperty("User-Agent", "Mozilla/5.0");
+        conexao.setConnectTimeout(3000); // 3 segundos é o bastante
+
+        if (conexao.getResponseCode() === 200) {
+            var inputStream = conexao.getInputStream();
+            java.nio.file.Files.copy(inputStream, arquivoLocal.toPath());
+            inputStream.close();
+            println("   🌐 Download concluído: " + codigo);
+            return arquivoLocal.getAbsolutePath();
+        }
+    } catch (e) {
+        println("   ⚠️ Falha ao obter " + codigo + " da web. A carta ficará sem arte.");
+    }
+    
+    return null; // Não encontrou local nem na web
+}
+
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
@@ -230,7 +262,6 @@ function tradutorArkhamFinal() {
     
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
-        
         
         var pastaPack = new File(caminhoPack);
         var pastaRaiz = pastaPack.getParentFile().getParentFile().getParentFile();
@@ -250,27 +281,29 @@ function tradutorArkhamFinal() {
 
         var pastaExport = new File(pastaPack, "Exportados");
         if (!pastaExport.exists()) pastaExport.mkdir();
+        
+        var pastaImagens = new File(pastaExport, "Imagens");
+        if (!pastaImagens.exists()) pastaImagens.mkdir();
 
         var ResourceKit = Packages.resources.ResourceKit;
         var arquivos = pastaPack.listFiles();
         
-        // --- PASSO 0: PRE-SCAN PARA DESCOBRIR TOTAIS DE ENCONTRO ---
+        // --- PASSO 0: PRE-SCAN TOTAIS ---
         var mapaTotais = {};
         for (var i = 0; i < arquivos.length; i++) {
             var arq = arquivos[i];
             if (arq.isFile() && arq.getName().toLowerCase().endsWith(".json")) {
-                var b = Files.readAllBytes(arq.toPath());
-                var jt = new java.lang.String(b, "UTF-8");
-                var card = JSON.parse(jt);
-                if (Array.isArray(card)) card = card[0];
-
-                // Usamos o encounter_code (ou pack_code se não houver) como chave
-                var chave = card.encounter_code || card.pack_code;
-                if (chave && card.encounter_position) {
-                    if (!mapaTotais[chave] || card.encounter_position > mapaTotais[chave]) {
-                        mapaTotais[chave] = card.encounter_position;
+                try {
+                    var b = Files.readAllBytes(arq.toPath());
+                    var card = JSON.parse(new java.lang.String(b, "UTF-8"));
+                    if (Array.isArray(card)) card = card[0];
+                    var chave = (card.pack_code || "").toLowerCase();
+                    if (chave && card.encounter_position) {
+                        if (!mapaTotais[chave] || card.encounter_position > mapaTotais[chave]) {
+                            mapaTotais[chave] = card.encounter_position;
+                        }
                     }
-                }
+                } catch(e) {}
             }
         }
         println("📊 Totais de Encontro mapeados: " + JSON.stringify(mapaTotais));
@@ -278,11 +311,11 @@ function tradutorArkhamFinal() {
         var cartasCriadas = 0;
         for (var f = 0; f < arquivos.length; f++) {
             var arquivoAtual = arquivos[f];
-            if (arquivoAtual.isFile() && arquivoAtual.getName().toLowerCase().endsWith(".json")) {
-                
+            if (!arquivoAtual.isFile() || !arquivoAtual.getName().toLowerCase().endsWith(".json")) continue;
+
+            try {
                 var bytes = Files.readAllBytes(arquivoAtual.toPath());
-                var jsonTexto = new java.lang.String(bytes, "UTF-8");
-                var c = JSON.parse(jsonTexto);
+                var c = JSON.parse(new java.lang.String(bytes, "UTF-8"));
                 if (Array.isArray(c)) c = c[0];
 
                 var tipo = (c.type_code || "asset").toLowerCase();
@@ -290,254 +323,111 @@ function tradutorArkhamFinal() {
                 var comp = ResourceKit.getGameComponentFromFile(arquivoMolde).clone();
                 var s = comp.getSettings();
 
-                // --- 1. IDENTIFICAÇÃO E TEXTOS ---
-                comp.setName(c.name);
-                
+                // 1. Identidade Básica
+                comp.setName(c.name || "Sem Nome");
+                s.set("Artist", c.illustrator || "");
+                s.set("Copyright", "<i>arkhamBR</i>");
+
+                // 2. Imagem Inteligente
+                var pathImg = obterImagem(c.code, pastaImagens);
+                if (pathImg) {
+                    var p0 = comp.getPortrait(0);
+                    if (p0) { p0.setSource(pathImg); p0.setScale(0.15); }
+                    s.set("Portrait-Portrait", pathImg);
+                }
+
+                // 3. Lógica por Tipo (Ato/Agenda/Local/Inimigo)
                 if (tipo === "scenario") {
                     var txtFrente = c.text || "";
                     s.set("Skull", limparTags(extrairSimbolo(txtFrente, "[skull]")));
                     s.set("Cultist", limparTags(extrairSimbolo(txtFrente, "[cultist]")));
                     s.set("Tablet", limparTags(extrairSimbolo(txtFrente, "[tablet]")));
                     s.set("ElderThing", limparTags(extrairSimbolo(txtFrente, "[elder_thing]")));
-
-                    var txtVerso = c.back_text || "";
-                    var valSkull = limparTags(extrairSimbolo(txtVerso, "[skull]"));
-                    s.set("SkullBack", valSkull); s.set("Skull2", valSkull);
-                    var valCultist = limparTags(extrairSimbolo(txtVerso, "[cultist]"));
-                    s.set("CultistBack", valCultist); s.set("Cultist2", valCultist);
-                    var valTablet = limparTags(extrairSimbolo(txtVerso, "[tablet]"));
-                    s.set("TabletBack", valTablet); s.set("Tablet2", valTablet);
-                    var valElder = limparTags(extrairSimbolo(txtVerso, "[elder_thing]"));
-                    s.set("ElderThingBack", valElder); s.set("ElderThing2", valElder);
-                    
                     s.set("ScenarioTitle", "Fácil / Normal");
-                    s.set("ScenarioTitle2", "Difícil / Especialista");      
+                    s.set("ScenarioTitle2", "Difícil / Especialista");  
                 } 
-                else if (tipo === "act") {
+                else if (tipo === "act" || tipo === "agenda") {
                     s.set("ScenarioDeckID", c.stage ? String(c.stage) : "a");
-                    s.set("Clues", String(c.clues || "0"));
-                    s.set("ActStory", c.flavor || ""); 
                     s.set("Rules", limparTags(c.text || ""));
-                    if (c.back_text || c.back_flavor) {
-                        s.set("TitleBack", c.back_name || "");
-                        s.set("AccentedStoryABack", c.back_flavor || "");
-                        s.set("RulesABack", limparTags(c.back_text || ""));
+                    if (tipo === "act") {
+                        s.set("Clues", String(c.clues || "0"));
+                        s.set("ActStory", c.flavor || "");
+                    } else {
+                        s.set("Doom", String(c.doom || "0"));
+                        s.set("AgendaStory", c.flavor || "");
                     }
-                } 
-                else if (tipo === "agenda") {
-                    s.set("ScenarioDeckID", c.stage ? String(c.stage) : "a");
-                    s.set("Doom", String(c.doom || "0"));
-                    s.set("AgendaStory", c.flavor || ""); 
-                    s.set("Rules", limparTags(c.text || ""));
-                    if (c.back_text || c.back_flavor) {
-                        s.set("TitleBack", c.back_name || "");
-                        s.set("AccentedStoryABack", c.back_flavor || "");
-                        s.set("RulesABack", limparTags(c.back_text || ""));
-                    }
+                    if (c.back_name) s.set("TitleBack", c.back_name);
+                    if (c.back_flavor) s.set("AccentedStoryABack", c.back_flavor);
+                    if (c.back_text) s.set("RulesABack", limparTags(c.back_text));
                 } 
                 else if (tipo === "location") {
-				    // 1. Atributos de Jogo
-				    if (c.shroud != null) s.set("Shroud", String(c.shroud));
-				    
-				    // Lógica de Pistas (Valor + ícone de multiplicador se necessário)
-				    if (c.clues != null) {
-				        var valorPistas = String(c.clues);
-				        if (c.clues_fixed === false || c.clues_fixed === undefined) {
-				            valorPistas += " <per>";
-				        }
-				        s.set("Clues", valorPistas);
-				    }
-				
-				    // 2. Ícones de Conexão
-				    if (c.location_symbol) s.set("LocationIcon", c.location_symbol);
-				    if (c.location_connections) {
-				        var lista = Array.isArray(c.location_connections) ? c.location_connections.join(", ") : c.location_connections;
-				        s.set("ConnectionIcons", lista);
-				    }
-				
-				    // 3. Textos da Frente (Lado com ???)
-				    s.set("Rules", limparTags(c.text || ""));
-				    s.set("Flavor", c.flavor || "");
-				
-				    // 4. Textos do Verso (Lado Revelado)
-				    if (c.back_name) s.set("TitleBack", c.back_name);
-				    if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
-				    if (c.back_flavor) s.set("FlavorBack", c.back_flavor);
-				} // ======================================================
-				// BLOCO: INIMIGOS (ENEMY)
-				// ======================================================
-				else if (tipo === "enemy") {
-				    // 1. Atributos de Combate (O "Disco" de Estatísticas)
-				    if (c.enemy_fight != null) s.set("Fight", String(c.enemy_fight));
-				    
-				    // Vida: Se for por investigador, adicionamos o ícone <per>
-				    if (c.health != null) {
-				        var valorVida = String(c.health);
-				        if (c.health_per_investigator === true) {
-				            valorVida += " <per>";
-				        }
-				        s.set("Health", valorVida);
-				    }
-				    
-				    if (c.enemy_evade != null) s.set("Evade", String(c.enemy_evade));
-				
-				    // 2. Dano e Horror (Quanto o inimigo bate)
-				    if (c.enemy_damage != null) s.set("Damage", String(c.enemy_damage));
-				    if (c.enemy_horror != null) s.set("Horror", String(c.enemy_horror));
-				
-				    // 3. Textos e Subtipo
-				    s.set("Traits", c.traits || "");
-				    s.set("Rules", limparTags(c.text || ""));
-				    s.set("Flavor", c.flavor || "");
-				
-				    // Se houver texto no verso (ex: inimigos de dupla face)
-				    if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
-				}
-				// ======================================================
+                    s.set("Shroud", String(c.shroud !== undefined ? c.shroud : "0"));
+                    s.set("Clues", String(c.clues || "0") + (c.clues_fixed === false ? " <per>" : ""));
+                    s.set("LocationIcon", c.location_symbol || "None");
+                    s.set("Rules", limparTags(c.text || ""));
+                    if (c.back_name) s.set("TitleBack", c.back_name);
+                    if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
+                    var pathVerso = obterImagem(c.code + "b", pastaImagens);
+                    if (pathVerso) { var p1 = comp.getPortrait(1); if(p1) p1.setSource(pathVerso); }
+                } 
+                else if (tipo === "enemy") {
+                    s.set("Fight", String(c.enemy_fight !== undefined ? c.enemy_fight : "0"));
+                    s.set("Health", String(c.health || "0") + (c.health_per_investigator ? " <per>" : ""));
+                    s.set("Evade", String(c.enemy_evade !== undefined ? c.enemy_evade : "0"));
+                    s.set("Damage", String(c.enemy_damage || "0"));
+                    s.set("Horror", String(c.enemy_horror || "0"));
+                    s.set("Traits", c.traits || "");
+                    s.set("Rules", limparTags(c.text || ""));
+                } 
                 else {
-				    // --- TEXTOS E ATRIBUTOS GERAIS ---
-				    s.set("Traits", c.traits || "");
-				    s.set("Rules", limparTags(c.text || ""));
-				    s.set("Flavor", c.flavor || "");
-				    if (c.subname) s.set("Subtitle", c.subname);
-				    
-				    // Nível e Custo (como na sua Faca 02152)
-				    if (c.xp != null) s.set("Level", String(c.xp));
-				    if (c.cost != null) s.set("ResourceCost", String(c.cost));
-				
-			    }
-				
-				    // --- LÓGICA DE ÍCONES DE HABILIDADE (PARA TODAS AS CARTAS NO ELSE) ---
-				    var listaIcones = [];
-				    for (var i = 0; i < MAPA_SKILLS.length; i++) {
-				        var qtd = c[MAPA_SKILLS[i].json] || 0;
-				        for (var n = 0; n < qtd; n++) {
-				            listaIcones.push(MAPA_SKILLS[i].eons);
-				        }
-				    }
-				
-				    // O Strange Eons Arkham Horror Lacerda/DIY costuma ter 6 slots de ícones
-				    for (var slotIdx = 1; slotIdx <= 6; slotIdx++) {
-				        var valorIcone = (slotIdx <= listaIcones.length) ? listaIcones[slotIdx - 1] : "None";
-				        s.set("Skill" + slotIdx, valorIcone);
-				    }
-				
-				    // --- TRATAMENTO DE VERSO PARA CARTAS JOGADOR / FRAQUEZAS ---
-				    if (c.back_text || c.back_name) {
-				        if (c.back_name) s.set("BackName", c.back_name);
-				        var regrasVerso = limparTags(c.back_text || "");
-				        s.set("BackRules", regrasVerso);
-				        s.set("RulesBack", regrasVerso);
-				    }
-				}
-                
-                // --- 1.5 LÓGICA DE CLASSE (USANDO O MAPA GLOBAL) ---
-                var classeFinal = (c.faction_code) ? MAPA_CLASSES[c.faction_code.toLowerCase()] || "Neutral" : "Neutral";
-                s.set("CardClass", classeFinal);
+                    s.set("Traits", c.traits || "");
+                    s.set("Rules", limparTags(c.text || ""));
+                    if (c.cost !== undefined) s.set("ResourceCost", String(c.cost));
+                    if (c.xp !== undefined) s.set("Level", String(c.xp));
+                }
 
-				// --- 2. RODAPÉ E COLEÇÃO (COM NÚMERO DE ENCONTRO) ---
-                
-                // 1. Ícone de Coleção (Canto inferior direito)
-                s.set("Collection", MAPA_ICONES_COLECAO[c.pack_code] || "CustomCollection");
+                // 4. Ícones de Habilidade e Slots
+                if (tipo !== "scenario" && tipo !== "act" && tipo !== "agenda") {
+                    var listaIcones = [];
+                    for (var k = 0; k < MAPA_SKILLS.length; k++) {
+                        var nIcons = c[MAPA_SKILLS[k].json] || 0;
+                        for (var n = 0; n < nIcons; n++) listaIcones.push(MAPA_SKILLS[k].eons);
+                    }
+                    for (var slotIdx = 1; slotIdx <= 6; slotIdx++) {
+                        s.set("Skill" + slotIdx, (slotIdx <= listaIcones.length) ? listaIcones[slotIdx - 1] : "None");
+                    }
+                }
+
+                if (tipo === "asset") {
+                    var slotBruto = (c.real_slot || c.slot || "");
+                    var partes = slotBruto.toLowerCase().split(/[.,;]+/);
+                    var s1 = MAPA_SLOTS[partes[0].trim()] || "None";
+                    s.set("Slot", s1);
+                    if (partes.length > 1) s.set("Slot2", MAPA_SLOTS[partes[1].trim()] || "None");
+                }
+
+                // 5. Rodapé e Encontro (Lógica Simplificada via Pack Code)
+                var refPack = (c.pack_code || "").toLowerCase();
+                s.set("Collection", MAPA_ICONES_COLECAO[refPack] || "CustomCollection");
                 if (c.position) s.set("CollectionNumber", String(c.position));
 
-                // 2. Ícone de Encontro e Números (8/10)
-                // Se a carta tem posição de encontro, ela merece o ícone e a numeração
-                if (c.encounter_position) {
-                    // Ícone (conforme seu ajuste que deu certo usando "Encounter")
-                    var refCenario = c.pack_code;
-                    var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
-                    s.set("Encounter", nomeIconeCenario);
-
-                    // Numeração: "EncounterSetNumber" é o atual, "EncounterSetCount" é o total
-                    s.set("EncounterNumber", String(c.encounter_position));
-                    
-                    var chaveContagem = c.encounter_code || c.pack_code;
-                    if (mapaTotais[chaveContagem]) {
-                        s.set("EncounterTotal", String(mapaTotais[chaveContagem]));
-                    }
-                } 
-                // Fallback para Scenario/Act/Agenda que as vezes não tem posição mas tem ícone
-                else if (tipo === "scenario" || tipo === "act" || tipo === "agenda") {
-                    var refCenario = c.pack_code;
-                    var nomeIconeCenario = MAPA_ICONES_CENARIO[refCenario.toLowerCase()] || refCenario;
-                    s.set("Encounter", nomeIconeCenario);
+                if (refPack !== "") {
+                    var nomeIconeEons = MAPA_ICONES_CENARIO[refPack] || refPack;
+                    s.set("Encounter", nomeIconeEons);
                 }
 
-                s.set("Artist", c.illustrator || "");
-                s.set("Copyright", "<i>arkhamBR</i>");
-
-                
-                // --- NOVO: LÓGICA DE SLOTS PARA ASSETS (CORRIGIDA) ---
-			    // --- LÓGICA DE SLOTS (USANDO REAL_SLOT) ---
-				    if (tipo === "asset") {
-			        var s1 = "None";
-			        var s2 = "None";
-			
-			        var slotBruto = (c.real_slot || c.slot || "");
-			        
-			        if (slotBruto !== "") {
-			            // Dividimos a string caso existam dois slots (ex: "Hand. Arcane")
-			            // O regex /[.,;]+/ separa por ponto, vírgula ou ponto e vírgula
-			            var partes = slotBruto.toLowerCase().split(/[.,;]+/);
-			            
-			            // Tratamos a primeira parte -> Slot 1
-			            if (partes.length >= 1) {
-			                var termo1 = partes[0].trim();
-			                s1 = MAPA_SLOTS[termo1] || "None";
-			            }
-			            
-			            // Tratamos a segunda parte -> Slot 2 (Ex: Lâmina Cantada)
-			            if (partes.length >= 2) {
-			                var termo2 = partes[1].trim();
-			                s2 = MAPA_SLOTS[termo2] || "None";
-			            }
-			            
-			            // Lógica Especial: Se o JSON diz apenas "Hand x2" e não dividiu em partes,
-			            // mas o plugin do Eons prefere dois ícones de "1 Hand" separados:
-			            if (s1 === "2 Hand" && s2 === "None") {
-			                // Descomente as linhas abaixo se preferir dois ícones individuais:
-			                // s1 = "1 Hand"; s2 = "1 Hand"; 
-			            }
-			        }
-			
-			        s.set("Slot", s1);
-			        s.set("Slot2", s2);
-			        
-			        if (s1 !== "None") println("   🗃️ Slots definidos: " + s1 + " / " + s2);
-
-                // --- 4. ATRIBUTOS ESPECÍFICOS ---
-                if (c.xp != null) s.set("Level", String(c.xp));
-                if (c.cost != null) s.set("ResourceCost", String(c.cost));
-                
-                if (tipo === "location") {
-                    if (c.shroud != null) s.set("Shroud", String(c.shroud));
-                    if (c.clues != null) s.set("Clues", String(c.clues));
-                }
-                
-                if (tipo === "enemy") {
-                    if (c.enemy_fight != null) s.set("Fight", String(c.enemy_fight));
-                    if (c.health != null) s.set("Health", String(c.health));
-                    if (c.enemy_evade != null) s.set("Evade", String(c.enemy_evade));
-                }
-				// ===========================================================================
-                // NOVO: LÓGICA DE QUANTIDADE, ITERAÇÃO DE ENCONTRO E SALVAMENTO
-                // ===========================================================================
-                
-                var qtd = c.quantity || 1;
-                
+                // 6. Salvamento e Cópias
+                var qtd = parseInt(c.quantity || 1);
                 for (var i = 0; i < qtd; i++) {
-                    // Se for carta de encontro com posição, somamos o index atual (i) à posição base
                     if (c.encounter_position) {
-                        var posicaoBase = parseInt(c.encounter_position);
-                        var posicaoAtualizada = posicaoBase + i;
-                        s.set("EncounterNumber", String(posicaoAtualizada));
+                        var posAtu = parseInt(c.encounter_position) + i;
+                        s.set("EncounterNumber", String(posAtu));
+                        var totalEnc = mapaTotais[refPack];
+                        if (totalEnc) s.set("EncounterTotal", String(totalEnc));
                     }
 
-                    // Gerar nome de arquivo único para não sobrescrever as cópias
-                    // Exemplo: "02166_1 - Nome.eon", "02166_2 - Nome.eon"
                     var sufixo = (qtd > 1) ? "_" + (i + 1) : "";
-                    var nomeArquivo = c.code + sufixo + " - " + c.name.replace(/[<>:"/\\|?*]/g, "") + ".eon";
+                    var nomeArquivo = c.code + sufixo + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + ".eon";
 
                     ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
                     cartasCriadas++;
@@ -545,13 +435,14 @@ function tradutorArkhamFinal() {
                     var logEncontro = c.encounter_position ? " [Encontro: " + s.get("EncounterNumber") + "]" : "";
                     println("✅ Gerada: " + nomeArquivo + logEncontro);
                 }
-                // ===========================================================================
+
+            } catch (errCard) {
+                println("❌ Erro no arquivo " + arquivoAtual.getName() + ": " + errCard);
             }
         }
         alert("Fábrica Concluída!\n" + cartasCriadas + " cartas exportadas.");
     } catch (err) {
-        println("💥 Erro: " + err);
+        println("💥 Erro Crítico: " + err);
     }
 }
-
 tradutorArkhamFinal();

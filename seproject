@@ -1,8 +1,8 @@
 # WARNING: If this file is deleted, Strange Eons will no longer
 # see this as a project/task folder!
-selected-members = 
+selected-members = :campanhas/02_Legado_de_Dunwich/O_Expresso_do_Condado_de_Essex
 first-row = 0
-open-folders = 
+open-folders = :campanhas:campanhas/02_Legado_de_Dunwich:strange eons
 notes = 
 res-id = andre
 type = PROJECT
