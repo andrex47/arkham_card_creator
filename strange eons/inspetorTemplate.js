@@ -35,7 +35,8 @@ function caçaChavesManual() {
 	    "BackRules", "Effect", "AgendaEffect", "ActEffect",
 	    "Description", "Details", "Text1", "Text2",
 	    "Encounter","EncounterSet","EncounterNumber","EncounterPosition","EncounterCount","Slot1","Slot2","Slot",
-	    "Portrait-Portrait","Portrait-2-Portrait"
+	    "Portrait-Portrait","Portrait-2-Portrait",
+	    "Class","Faction","Class1"
     ];
     println("\n--- 🕵️ TESTANDO CHAVES PROVÁVEIS ---");
     

@@ -187,6 +187,20 @@ var MAPA_ICONES_CENARIO = {
     "fhvc": "HemlockValeCampaign",
     "tftbw": "TheFeastOfHemlockValeCampaign"
 };
+
+
+var MOLDES = {
+    "asset": "Template_Asset.eon",
+    "investigator": "Template_Investigator.eon",
+    "enemy": "Template_Enemy.eon",
+    "event": "Template_Event.eon",
+    "skill": "Template_Skill.eon",
+    "treachery": "Template_Treachery.eon",
+    "location": "Template_Location.eon",
+    "agenda": "Template_Agenda.eon",
+    "act": "Template_Act.eon",
+    "scenario": "Template_Scenario.eon"
+};
 // ===========================================================================
 // FUNÇÕES UTILITÁRIAS
 // ===========================================================================
@@ -253,40 +267,91 @@ function obterImagem(codigo, pastaDestino) {
     return null; // Não encontrou local nem na web
 }
 
+/**
+ * Descobre a raiz do projeto de forma dinâmica (via sourcefile) 
+ * ou estática (fallback para Windows).
+ */
+function obterRaizProjeto() {
+    var raiz;
+    try {
+        // Tenta detectar o arquivo do script atual
+        if (typeof sourcefile !== 'undefined' && sourcefile !== null) {
+            // Se o script está em /scripts/tradutor.js, subimos 1 nível para chegar na raiz
+            var arquivoScript = new java.io.File(sourcefile);
+            raiz = arquivoScript.getParentFile(); 
+            
+            // Se o seu script estiver em uma subpasta (ex: /js/scripts/tradução.js), 
+            // descomente a linha abaixo para subir mais um nível:
+            // raiz = raiz.getParentFile(); 
+        }
+    } catch (e) {
+        println("ℹ️ Não foi possível detectar raiz dinâmica, usando fallback.");
+    }
+
+    // Se falhou (script não salvo) ou não detectou, usa o caminho manual do Windows
+    if (!raiz || raiz == null) {
+        raiz = new java.io.File("C:/Users/andre/PhpstormProjects/arkham_card_creator");
+    }
+
+    // Log para você ter certeza do que está acontecendo no console
+    println("📂 Contexto da Raiz: " + raiz.getAbsolutePath());
+    
+    return raiz;
+}
+
+/**
+ * Configura o retrato de uma carta de forma portátil e editável.
+ * @param {GameComponent} comp O componente da carta.
+ * @param {string} codigo O código da carta (ex: "01001").
+ * @param {java.io.File} pastaImagens Pasta onde as imagens estão/serão salvas.
+ * @param {number} indice O índice do retrato (0 para frente, 1 para verso).
+ */
+function configurarRetrato(comp, codigo, pastaImagens, indice) {
+    var sufixo = (indice === 1) ? "b" : ""; // Adiciona 'b' para versos (ex: 01001b)
+    var imgResult = obterImagem(codigo + sufixo, pastaImagens);
+    
+    if (imgResult) {
+        var p = comp.getPortrait(indice);
+        if (p) {
+            // Força o carregamento mas limpa a trava do caminho absoluto
+            p.setSource(new java.io.File(imgResult.toString()).getAbsolutePath());
+            p.setScale(0.15);
+            
+            var chaveSetting = (indice === 0) ? "Portrait-Portrait" : "Portrait-" + indice + "-Portrait";
+            comp.getSettings().remove(chaveSetting); 
+            comp.markUnsavedChanges();
+        }
+    }
+}
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-
-function tradutorArkhamFinal() {
-    var caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/02_Legado_de_Dunwich/O_Expresso_do_Condado_de_Essex";
+const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/03_Caminho_para_Carcosa/Ecos_do_Passado";
     
+function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
+       // 1. Definição de Raiz e Pastas (Usando Namespace explícito do Java)
+        var RAIZ_PROJETO = obterRaizProjeto(); 
+        var pastaPack = new java.io.File(caminhoPack);
         
-        var pastaPack = new File(caminhoPack);
-        var pastaRaiz = pastaPack.getParentFile().getParentFile().getParentFile();
-        
-        var moldes = {
-            "asset": new File(pastaRaiz, "Template_Asset.eon"),
-            "investigator": new File(pastaRaiz, "Template_Investigator.eon"),
-            "enemy": new File(pastaRaiz, "Template_Enemy.eon"),
-            "event": new File(pastaRaiz, "Template_Event.eon"),
-            "skill": new File(pastaRaiz, "Template_Skill.eon"),
-            "treachery": new File(pastaRaiz, "Template_Treachery.eon"),
-            "location": new File(pastaRaiz, "Template_Location.eon"),
-            "agenda": new File(pastaRaiz, "Template_Agenda.eon"),
-            "act": new File(pastaRaiz, "Template_Act.eon"),
-            "scenario": new File(pastaRaiz, "Template_Scenario.eon")
-        };
+        // Verificação de segurança: A pasta de origem existe?
+        if (!pastaPack.exists() || !pastaPack.isDirectory()) {
+            println("❌ ERRO: A pasta do Pack não foi encontrada: " + caminhoPack);
+            return;
+        }
 
-        var pastaExport = new File(pastaPack, "Exportados");
+        var pastaExport = new java.io.File(pastaPack, "Exportados");
         if (!pastaExport.exists()) pastaExport.mkdir();
         
-        var pastaImagens = new File(pastaExport, "Imagens");
+        var pastaImagens = new java.io.File(pastaExport, "Imagens");
         if (!pastaImagens.exists()) pastaImagens.mkdir();
 
         var ResourceKit = Packages.resources.ResourceKit;
         var arquivos = pastaPack.listFiles();
+        
+       println("🏠 Raiz do Projeto detectada: " + RAIZ_PROJETO.getAbsolutePath());
+       println("📂 Pasta de Destino: " + pastaExport.getAbsolutePath());
         
         // --- PASSO 0: PRE-SCAN TOTAIS ---
         var mapaTotais = {};
@@ -294,7 +359,7 @@ function tradutorArkhamFinal() {
             var arq = arquivos[i];
             if (arq.isFile() && arq.getName().toLowerCase().endsWith(".json")) {
                 try {
-                    var b = Files.readAllBytes(arq.toPath());
+                    var b = java.nio.file.Files.readAllBytes(arq.toPath());
                     var card = JSON.parse(new java.lang.String(b, "UTF-8"));
                     if (Array.isArray(card)) card = card[0];
                     var chave = (card.pack_code || "").toLowerCase();
@@ -316,26 +381,29 @@ function tradutorArkhamFinal() {
             try {
                 var bytes = Files.readAllBytes(arquivoAtual.toPath());
                 var c = JSON.parse(new java.lang.String(bytes, "UTF-8"));
-                if (Array.isArray(c)) c = c[0];
-
-                var tipo = (c.type_code || "asset").toLowerCase();
-                var arquivoMolde = moldes[tipo] || moldes["asset"];
-                var comp = ResourceKit.getGameComponentFromFile(arquivoMolde).clone();
-                var s = comp.getSettings();
+            	if (Array.isArray(c)) c = c[0];
+				var tipo = (c.type_code).toLowerCase();
+               // --- BUSCA DINÂMICA DO MOLDE NA RAIZ ---
+	            var nomeArquivoMolde = MOLDES[tipo];
+	            var arquivoMolde = new File(RAIZ_PROJETO, nomeArquivoMolde);
+	
+	            if (!arquivoMolde.exists()) {
+	                println("Molde não encontrado em: " + arquivoMolde.getAbsolutePath());
+	                continue;
+	            }
+	           var comp = ResourceKit.getGameComponentFromFile(arquivoMolde).clone();
+				var s = comp.getSettings();
+	
+				comp.markUnsavedChanges();
 
                 // 1. Identidade Básica
                 comp.setName(c.name || "Sem Nome");
                 s.set("Artist", c.illustrator || "");
                 s.set("Copyright", "<i>arkhamBR</i>");
 
-                // 2. Imagem Inteligente
-                var pathImg = obterImagem(c.code, pastaImagens);
-                if (pathImg) {
-                    var p0 = comp.getPortrait(0);
-                    if (p0) { p0.setSource(pathImg); p0.setScale(0.15); }
-                    s.set("Portrait-Portrait", pathImg);
-                }
-
+            // --- 2. LÓGICA DE IMAGEM PORTÁTIL, EDITÁVEL E BLINDADA ---
+				// --- LÓGICA DE IMAGEM ---
+				//configurarRetrato(comp, c.code, pastaImagens, 0); // Comente esta linha para desativar imagens
                 // 3. Lógica por Tipo (Ato/Agenda/Local/Inimigo)
                 if (tipo === "scenario") {
                     var txtFrente = c.text || "";
@@ -367,8 +435,8 @@ function tradutorArkhamFinal() {
                     s.set("Rules", limparTags(c.text || ""));
                     if (c.back_name) s.set("TitleBack", c.back_name);
                     if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
-                    var pathVerso = obterImagem(c.code + "b", pastaImagens);
-                    if (pathVerso) { var p1 = comp.getPortrait(1); if(p1) p1.setSource(pathVerso); }
+                    //configurarRetrato(comp, c.code, pastaImagens, 0); // Imagem da Frente
+    				//configurarRetrato(comp, c.code, pastaImagens, 1); // Imagem do Verso
                 } 
                 else if (tipo === "enemy") {
                     s.set("Fight", String(c.enemy_fight !== undefined ? c.enemy_fight : "0"));
@@ -403,7 +471,26 @@ function tradutorArkhamFinal() {
                     var partes = slotBruto.toLowerCase().split(/[.,;]+/);
                     var s1 = MAPA_SLOTS[partes[0].trim()] || "None";
                     s.set("Slot", s1);
-                    if (partes.length > 1) s.set("Slot2", MAPA_SLOTS[partes[1].trim()] || "None");
+                    if (partes.length > 1) 
+                    {
+                    	s.set("Slot2", MAPA_SLOTS[partes[1].trim()] || "None");
+                    }
+                    // --- APLICAÇÃO DE CLASSE (RESTAURADA) ---
+					var classeChave = (c.faction_code).toLowerCase();
+					var classeEons = MAPA_CLASSES[classeChave];
+					
+					// Define a classe primária
+					s.set("CardClass", classeEons); 
+					//s.set("Faction", classeEons); // Alguns templates usam 'Faction', outros 'Class'. Setamos os dois por segurança.
+					
+					// Lógica para cartas de Dupla Classe (Multiclass)
+					if (c.faction2_code) {
+					    var classe2 = MAPA_CLASSES[c.faction2_code.toLowerCase()];
+					    if (classe2) {
+					        s.set("CardClass2", classe2);
+					        //s.set("Faction2", classe2);
+					    }
+					}
                 }
 
                 // 5. Rodapé e Encontro (Lógica Simplificada via Pack Code)
