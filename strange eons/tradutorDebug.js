@@ -268,34 +268,46 @@ function obterImagem(codigo, pastaDestino) {
 }
 
 /**
- * Descobre a raiz do projeto de forma dinâmica (via sourcefile) 
- * ou estática (fallback para Windows).
+ * Descobre a raiz do projeto de forma dinâmica.
+ * Prioriza o local do script; se falhar, escala a partir da pasta do pack.
  */
-function obterRaizProjeto() {
-    var raiz;
+function obterRaizProjeto(pastaPack) {
+    var raiz = null;
+
+    // 1. Tenta via sourcefile (Onde este script .js está salvo)
     try {
-        // Tenta detectar o arquivo do script atual
         if (typeof sourcefile !== 'undefined' && sourcefile !== null) {
-            // Se o script está em /scripts/tradutor.js, subimos 1 nível para chegar na raiz
             var arquivoScript = new java.io.File(sourcefile);
-            raiz = arquivoScript.getParentFile(); 
-            
-            // Se o seu script estiver em uma subpasta (ex: /js/scripts/tradução.js), 
-            // descomente a linha abaixo para subir mais um nível:
-            // raiz = raiz.getParentFile(); 
+            // Se o script estiver na RAIZ, usamos getParentFile(). 
+            // Se estiver em RAIZ/scripts/, precisaríamos de dois getParentFile().
+            raiz = arquivoScript.getParentFile();
+            println("🔎 Raiz detectada via sourcefile: " + raiz.getAbsolutePath());
         }
     } catch (e) {
-        println("ℹ️ Não foi possível detectar raiz dinâmica, usando fallback.");
+        // Silencioso para não poluir o console caso sourcefile não exista no contexto
     }
 
-    // Se falhou (script não salvo) ou não detectou, usa o caminho manual do Windows
-    if (!raiz || raiz == null) {
-        raiz = new java.io.File("C:/Users/andre/PhpstormProjects/arkham_card_creator");
+    // 2. Fallback via Hierarquia (Sobe 3 níveis a partir do Pack)
+    // Estrutura: [RAIZ] / campanhas / [NOME_EXPANSAO] / [PASTA_PACK]
+    if (!raiz || !raiz.exists()) {
+        try {
+            if (pastaPack && pastaPack.exists()) {
+                // Sobe: PACK (0) -> EXPANSAO (1) -> campanhas (2) -> RAIZ (3)
+                raiz = pastaPack.getParentFile().getParentFile().getParentFile();
+                println("📂 Raiz calculada via hierarquia do pack: " + raiz.getAbsolutePath());
+            }
+        } catch (e) {
+            println("❌ Erro ao tentar escalar níveis de pasta a partir do pack.");
+        }
     }
 
-    // Log para você ter certeza do que está acontecendo no console
-    println("📂 Contexto da Raiz: " + raiz.getAbsolutePath());
-    
+    // Validação final
+    if (!raiz || !raiz.exists()) {
+        println("🚨 CRÍTICO: Não foi possível determinar a raiz do projeto automaticamente!");
+        // Aqui o script provavelmente vai dar erro ao tentar buscar os moldes, 
+        // o que é melhor do que salvar em caminhos fantasmas.
+    }
+
     return raiz;
 }
 
@@ -326,13 +338,12 @@ function configurarRetrato(comp, codigo, pastaImagens, indice) {
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/03_Caminho_para_Carcosa/Ecos_do_Passado";
+const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/03_Caminho_para_Carcosa/As_Estrelas_Negras_se_Elevam/";
     
 function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
        // 1. Definição de Raiz e Pastas (Usando Namespace explícito do Java)
-        var RAIZ_PROJETO = obterRaizProjeto(); 
         var pastaPack = new java.io.File(caminhoPack);
         
         // Verificação de segurança: A pasta de origem existe?
@@ -340,6 +351,14 @@ function tradutorArkhamFinal() {
             println("❌ ERRO: A pasta do Pack não foi encontrada: " + caminhoPack);
             return;
         }
+        
+        var RAIZ_PROJETO = obterRaizProjeto(pastaPack); 
+
+		if(!RAIZ_PROJETO.exists() || !RAIZ_PROJETO.isDirectory())
+		{
+			println("ERRO: PASTA RAIZ DO PROJETO NÃO ENCONTRADA: " + caminhoPack);
+            return;
+		}
 
         var pastaExport = new java.io.File(pastaPack, "Exportados");
         if (!pastaExport.exists()) pastaExport.mkdir();
@@ -391,19 +410,17 @@ function tradutorArkhamFinal() {
 	                println("Molde não encontrado em: " + arquivoMolde.getAbsolutePath());
 	                continue;
 	            }
-	           var comp = ResourceKit.getGameComponentFromFile(arquivoMolde).clone();
+	           	var comp = ResourceKit.getGameComponentFromFile(arquivoMolde).clone();
 				var s = comp.getSettings();
-	
-				comp.markUnsavedChanges();
-
-                // 1. Identidade Básica
-                comp.setName(c.name || "Sem Nome");
+				
+		
+		
+               comp.setName(c.name || "Sem Nome");
                 s.set("Artist", c.illustrator || "");
                 s.set("Copyright", "<i>arkhamBR</i>");
 
             // --- 2. LÓGICA DE IMAGEM PORTÁTIL, EDITÁVEL E BLINDADA ---
 				// --- LÓGICA DE IMAGEM ---
-				//configurarRetrato(comp, c.code, pastaImagens, 0); // Comente esta linha para desativar imagens
                 // 3. Lógica por Tipo (Ato/Agenda/Local/Inimigo)
                 if (tipo === "scenario") {
                     var txtFrente = c.text || "";
@@ -488,7 +505,6 @@ function tradutorArkhamFinal() {
 					    var classe2 = MAPA_CLASSES[c.faction2_code.toLowerCase()];
 					    if (classe2) {
 					        s.set("CardClass2", classe2);
-					        //s.set("Faction2", classe2);
 					    }
 					}
                 }
@@ -515,8 +531,8 @@ function tradutorArkhamFinal() {
 
                     var sufixo = (qtd > 1) ? "_" + (i + 1) : "";
                     var nomeArquivo = c.code + sufixo + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + ".eon";
-
-                    ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
+					//comp.createDefaultVisuals(); 
+					ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
                     cartasCriadas++;
                     
                     var logEncontro = c.encounter_position ? " [Encontro: " + s.get("EncounterNumber") + "]" : "";
