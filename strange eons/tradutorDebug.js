@@ -98,94 +98,108 @@ var MAPA_ICONES_COLECAO = {
 
 var MAPA_ICONES_CENARIO = {
 
-    "core": "CoreSet",
-    "rcore": "RevisedCoreSet",
-
     // Night of the Zealot
-    "tnotz": "NightOfTheZealot",
-    "eotn": "TheGathering",
-    "lita": "MidnightMasks",
-    "rtnotz": "ReturnToNightOfTheZealot",
+    "night_of_the_zealot": "NightOfTheZealot",
+    "the_gathering": "TheGathering",
+    "the_midnight_masks": "MidnightMasks",
+    "the_devourer_below": "TheDevourerBelow",
+    "return_to_night_of_the_zealot": "ReturnToNightOfTheZealot",
 
     // Dunwich Legacy
-    "dwl": "TheDunwichLegacy",
-    "tmm": "TheMiskatonicMuseum",
-    "tece": "TheEssexCountyExpress",
-    "bota": "BloodOnTheAltar",
-    "uau": "UndimensionedAndUnseen",
-    "wda": "WhereDoomAwaits",
-    "litas": "LostInTimeAndSpace",
-    "rtdwl": "ReturnToTheDunwichLegacy",
+    "extracurricular_activity": "ExtracurricularActivity",
+    "the_house_always_wins": "TheHouseAlwaysWins",
+    "the_miskatonic_museum": "TheMiskatonicMuseum",
+    "the_essex_county_express": "TheEssexCountyExpress",
+    "blood_on_the_altar": "BloodOnTheAltar",
+    "undimensioned_and_unseen": "UndimensionedAndUnseen",
+    "where_doom_awaits": "WhereDoomAwaits",
+    "lost_in_time_and_space": "LostInTimeAndSpace",
+
+    // Return to Dunwich
+    "return_to_extracurricular_activity": "ReturnToExtracurricularActivity",
+    "return_to_the_house_always_wins": "ReturnToTheHouseAlwaysWins",
+    "return_to_the_miskatonic_museum": "ReturnToTheMiskatonicMuseum",
+    "return_to_the_essex_county_express": "ReturnToTheEssexCountyExpress",
+    "return_to_blood_on_the_altar": "ReturnToBloodOnTheAltar",
+    "return_to_undimensioned_and_unseen": "ReturnToUndimensionedAndUnseen",
+    "return_to_where_doom_awaits": "ReturnToWhereDoomAwaits",
+    "return_to_lost_in_time_and_space": "ReturnToLostInTimeAndSpace",
+    "beyond_the_threshold": "BeyondTheThreshold",
 
     // Path to Carcosa
-    "ptc": "ThePathToCarcosa",
-    "eotp": "EchoesOfThePast",
-    "uapa": "UnspeakableOath",
-    "tuo": "TheUnspeakableOath",
-    "tpm": "ThePallidMask",
-    "bsr": "BlackStarsRise",
-    "tdoy": "DimCarcosa",
-    "rtptc": "ReturnToThePathToCarcosa",
+    "curtain_call": "CurtainCall",
+    "the_last_king": "TheLastKing",
+    "echoes_of_the_past": "EchoesOfThePast",
+    "the_unspeakable_oath": "TheUnspeakableOath",
+    "a_phantom_of_truth": "PhantomOfTruth",
+    "the_pallid_mask": "ThePallidMask",
+    "black_stars_rise": "BlackStarsRise",
+    "dim_carcosa": "DimCarcosa",
+
+    // Return to Carcosa
+    "return_to_curtain_call": "ReturnToCurtainCall",
+    "return_to_the_last_king": "ReturnToTheLastKing",
+    "return_to_echoes_of_the_past": "ReturnToEchoesOfThePast",
+    "return_to_the_unspeakable_oath": "ReturnToTheUnspeakableOath",
+    "return_to_a_phantom_of_truth": "ReturnToPhantomOfTruth",
+    "return_to_the_pallid_mask": "ReturnToThePallidMask",
+    "return_to_black_stars_rise": "ReturnToBlackStarsRise",
+    "return_to_dim_carcosa": "ReturnToDimCarcosa",
 
     // Forgotten Age
-    "tfa": "TheForgottenAge",
-    "tof": "ThreadsOfFate",
-    "tbb": "TheBoundaryBeyond",
-    "hote": "HeartOfTheElders",
-    "tcoa": "TheCityOfArchives",
-    "tdi": "TheDepthsOfYoth",
-    "sha": "ShatteredAeons",
-    "rttfa": "ReturnToTheForgottenAge",
+    "the_forgotten_age": "TheForgottenAge",
+    "doom_of_eztli": "DoomOfEztli",
+    "threads_of_fate": "ThreadsOfFate",
+    "the_boundary_beyond": "TheBoundaryBeyond",
+    "heart_of_the_elders": "HeartOfTheElders",
+    "the_city_of_archives": "TheCityOfArchives",
+    "the_depths_of_yoth": "TheDepthsOfYoth",
+    "shattered_aeons": "ShatteredAeons",
 
     // Circle Undone
-    "tcu": "TheCircleUndone",
-    "tsn": "TheSecretName",
-    "pas": "TheWagesOfSin",
-    "wos": "TheWagesOfSin",
-    "wvg": "ForTheGreaterGood",
-    "fgg": "ForTheGreaterGood",
-    "uad": "UnionAndDisillusion",
-    "itd": "InTheClutchesOfChaos",
-    "icc": "InTheClutchesOfChaos",
-    "bof": "BeforeTheBlackThrone",
-    "bbt": "BeforeTheBlackThrone",
-    "rttcu": "ReturnToTheCircleUndone",
+    "disappearance_at_the_twilight_estate": "TwilightEstate",
+    "the_witching_hour": "TheWitchingHour",
+    "the_secret_name": "TheSecretName",
+    "the_wages_of_sin": "TheWagesOfSin",
+    "for_the_greater_good": "ForTheGreaterGood",
+    "union_and_disillusion": "UnionAndDisillusion",
+    "in_the_clutches_of_chaos": "InTheClutchesOfChaos",
+    "before_the_black_throne": "BeforeTheBlackThrone",
 
     // Dream Eaters
-    "tde": "TheDreamEaters",
-    "sfk": "SearchForKadath",
-    "tsh": "AThousandShapesOfHorror",
-    "dsm": "DarkSideOfTheMoon",
-    "pnr": "PointOfNoReturn",
-    "wgd": "WhereTheGodsDwell",
-    "woc": "WeaverOfTheCosmos",
-    "tdcc": "DreamEatersCampaign",
-    "tdcp": "DreamEatersInvestigators",
+    "beyond_the_gates_of_sleep": "BeyondTheGatesOfSleep",
+    "waking_nightmare": "WakingNightmare",
+    "search_for_kadath": "SearchForKadath",
+    "a_thousand_shapes_of_horror": "ThousandShapesOfHorror",
+    "dark_side_of_the_moon": "DarkSideOfTheMoon",
+    "point_of_no_return": "PointOfNoReturn",
+    "where_the_gods_dwell": "WhereTheGodsDwell",
+    "weaver_of_the_cosmos": "WeaverOfTheCosmos",
 
-    // Innsmouth Conspiracy
-    "tic": "TheInnsmouthConspiracy",
-    "itdd": "InTooDeep",
-    "tdg": "TheDevilReef",
-    "hoth": "HorrorInHighGear",
-    "dre": "AThousandShapesOfHorror",
-    "lod": "TheLairOfDagon",
-    "iotv": "IntoTheMaelstrom",
+    // Innsmouth
+    "the_pit_of_despair": "PitOfDespair",
+    "in_too_deep": "InTooDeep",
+    "devil_reef": "DevilReef",
+    "horror_in_high_gear": "HorrorInHighGear",
+    "a_light_in_the_fog": "LightInTheFog",
+    "the_lair_of_dagon": "LairOfDagon",
+    "into_the_maelstrom": "IntoTheMaelstrom",
 
     // Edge of the Earth
-    "eote": "EdgeOfTheEarth",
-    "eoep": "EdgeOfTheEarthInvestigators",
-    "eoec": "EdgeOfTheEarthCampaign",
+    "ice_and_death": "IceAndDeath",
+    "fatal_mirage": "FatalMirage",
+    "to_the_forbidden_peaks": "ForbiddenPeaks",
+    "city_of_the_elder_things": "CityOfElderThings",
+    "the_heart_of_madness": "HeartOfMadness",
 
     // Scarlet Keys
-    "tsk": "TheScarletKeys",
-    "tskp": "TheScarletKeysInvestigators",
-    "tskc": "TheScarletKeysCampaign",
-
-    // Hemlock Vale
-    "fhv": "TheFeastOfHemlockVale",
-    "fhvp": "HemlockValeInvestigators",
-    "fhvc": "HemlockValeCampaign",
-    "tftbw": "TheFeastOfHemlockValeCampaign"
+    "riddles_and_rain": "RiddlesAndRain",
+    "dead_heat": "DeadHeat",
+    "dancing_mad": "DancingMad",
+    "dogs_of_war": "DogsOfWar",
+    "shades_of_suffering": "ShadesOfSuffering",
+    "without_a_trace": "WithoutATrace",
+    "on_thin_ice": "OnThinIce"
 };
 
 
@@ -204,6 +218,17 @@ var MOLDES = {
 // ===========================================================================
 // FUNÇÕES UTILITÁRIAS
 // ===========================================================================
+
+function snakeParaPascal(str) {
+    if (!str) return "";
+    
+    return str
+        .split("_")
+        .map(function(p) {
+            return p.charAt(0).toUpperCase() + p.slice(1);
+        })
+        .join("");
+}
 
 function limparTags(texto) {
     if (!texto) return "";
@@ -271,31 +296,47 @@ function obterImagem(codigo, pastaDestino) {
  * Descobre a raiz do projeto de forma dinâmica (via sourcefile) 
  * ou estática (fallback para Windows).
  */
-function obterRaizProjeto() {
-    var raiz;
+/**
+ * Descobre a raiz do projeto de forma dinâmica.
+ * Prioriza o local do script; se falhar, escala a partir da pasta do pack.
+ */
+function obterRaizProjeto(pastaPack) {
+    var raiz = null;
+
+    // 1. Tenta via sourcefile (Onde este script .js está salvo)
     try {
-        // Tenta detectar o arquivo do script atual
         if (typeof sourcefile !== 'undefined' && sourcefile !== null) {
-            // Se o script está em /scripts/tradutor.js, subimos 1 nível para chegar na raiz
             var arquivoScript = new java.io.File(sourcefile);
-            raiz = arquivoScript.getParentFile(); 
-            
-            // Se o seu script estiver em uma subpasta (ex: /js/scripts/tradução.js), 
-            // descomente a linha abaixo para subir mais um nível:
-            // raiz = raiz.getParentFile(); 
+            // Se o script estiver na RAIZ, usamos getParentFile().
+            // Se estiver em RAIZ/scripts/, precisaríamos de dois getParentFile().
+            raiz = arquivoScript.getParentFile();
+            println("🔎 Raiz detectada via sourcefile: " + raiz.getAbsolutePath());
         }
     } catch (e) {
-        println("ℹ️ Não foi possível detectar raiz dinâmica, usando fallback.");
+        // Silencioso para não poluir o console caso sourcefile não exista no contexto
     }
 
-    // Se falhou (script não salvo) ou não detectou, usa o caminho manual do Windows
-    if (!raiz || raiz == null) {
-        raiz = new java.io.File("C:/Users/andre/PhpstormProjects/arkham_card_creator");
+    // 2. Fallback via Hierarquia (Sobe 3 níveis a partir do Pack)
+    // Estrutura: [RAIZ] / campanhas / [NOME_EXPANSAO] / [PASTA_PACK]
+    if (!raiz || !raiz.exists()) {
+        try {
+            if (pastaPack && pastaPack.exists()) {
+                // Sobe: PACK (0) -> EXPANSAO (1) -> campanhas (2) -> RAIZ (3)
+                raiz = pastaPack.getParentFile().getParentFile().getParentFile();
+                println("📂 Raiz calculada via hierarquia do pack: " + raiz.getAbsolutePath());
+            }
+        } catch (e) {
+            println("❌ Erro ao tentar escalar níveis de pasta a partir do pack.");
+        }
     }
 
-    // Log para você ter certeza do que está acontecendo no console
-    println("📂 Contexto da Raiz: " + raiz.getAbsolutePath());
-    
+    // Validação final
+    if (!raiz || !raiz.exists()) {
+        println("🚨 CRÍTICO: Não foi possível determinar a raiz do projeto automaticamente!");
+        // Aqui o script provavelmente vai dar erro ao tentar buscar os moldes,
+        // o que é melhor do que salvar em caminhos fantasmas.
+    }
+
     return raiz;
 }
 
@@ -326,15 +367,15 @@ function configurarRetrato(comp, codigo, pastaImagens, indice) {
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/03_Caminho_para_Carcosa/A_Mascara_Palida";
+const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
     
 function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
        // 1. Definição de Raiz e Pastas (Usando Namespace explícito do Java)
-        var RAIZ_PROJETO = obterRaizProjeto(); 
+
         var pastaPack = new java.io.File(caminhoPack);
-        
+        var RAIZ_PROJETO = obterRaizProjeto(pastaPack);
         // Verificação de segurança: A pasta de origem existe?
         if (!pastaPack.exists() || !pastaPack.isDirectory()) {
             println("❌ ERRO: A pasta do Pack não foi encontrada: " + caminhoPack);
@@ -362,17 +403,20 @@ function tradutorArkhamFinal() {
                     var b = java.nio.file.Files.readAllBytes(arq.toPath());
                     var card = JSON.parse(new java.lang.String(b, "UTF-8"));
                     if (Array.isArray(card)) card = card[0];
-                    var chave = (card.pack_code || "").toLowerCase();
-                    if (chave && card.encounter_position) {
-                        if (!mapaTotais[chave] || card.encounter_position > mapaTotais[chave]) {
-                            mapaTotais[chave] = card.encounter_position;
+                    
+                    // Chave agora prioriza o encontro, senão usa o pack
+                    var chaveTotal = (card.encounter_code || card.pack_code || "").toLowerCase();
+                    
+                    if (chaveTotal && card.encounter_position) {
+                        if (!mapaTotais[chaveTotal] || card.encounter_position > mapaTotais[chaveTotal]) {
+                            mapaTotais[chaveTotal] = card.encounter_position;
                         }
                     }
                 } catch(e) {}
             }
         }
         println("📊 Totais de Encontro mapeados: " + JSON.stringify(mapaTotais));
-        
+        var avisosFaltantes = []; // Lista para guardar códigos não encontrados
         var cartasCriadas = 0;
 		for (var f = 0; f < arquivos.length; f++) {
 		    var arquivoAtual = arquivos[f];
@@ -483,12 +527,30 @@ function tradutorArkhamFinal() {
 		            }
 		        }
 		        
-		        if(tipo == "scenario" || tipo == "act" || tipo == "agenda")
-		        {
-		        	if (refPack !== "") {
-		            	s.set("Encounter", MAPA_ICONES_CENARIO[refPack] || refPack);
-		            }
-		        }
+				// --- AJUSTE DE ÍCONE DE ENCONTRO ---
+				var chaveEncontro = (c.encounter_code || c.pack_code || "").toLowerCase();
+				
+				if (tipo === "scenario" || tipo === "act" || tipo === "agenda" || tipo === "enemy" || tipo === "treachery" || tipo === "location") {
+				    if (chaveEncontro !== "") {
+				        var iconeEons = MAPA_ICONES_CENARIO[chaveEncontro];
+				
+				        // Se não está no mapa, tenta a conversão automática
+				        if (!iconeEons) {
+				            iconeEons = snakeParaPascal(chaveEncontro);
+				            // Opcional: println("  ℹ️ Conversão automática: " + chaveEncontro + " -> " + iconeEons);
+				        }
+				
+				        // Define no componente
+				        s.set("Encounter", iconeEons || "CustomEncounter");
+				
+				        // Só gera log se você quiser monitorar o que está sendo automatizado 
+				        // ou se o resultado for algo que você suspeita que não exista no plugin
+				        if (!MAPA_ICONES_CENARIO[chaveEncontro]) {
+				             var msg = "ℹ️ Código automatizado (não estava no mapa): '" + chaveEncontro + "' -> '" + iconeEons + "'";
+				             if (avisosFaltantes.indexOf(msg) === -1) avisosFaltantes.push(msg);
+				        }
+				    }
+				}
 		
 		        // --- 5. SALVAMENTO E FINALIZAÇÃO ---
 		        var qtd = parseInt(c.quantity || 1);
@@ -496,12 +558,12 @@ function tradutorArkhamFinal() {
 		            if (c.encounter_position) {
 		                var posAtu = parseInt(c.encounter_position) + j;
 		                s.set("EncounterNumber", String(posAtu));
-		                var totalEnc = mapaTotais[refPack];
+						var totalEnc = mapaTotais[chaveEncontro]; // Use a mesma chave de encontro usada no ícone
 		                if (totalEnc) s.set("EncounterTotal", String(totalEnc));
 		            }
 		
 		            var sufixo = (qtd > 1) ? "_" + (j + 1) : "";
-		            var nomeArquivo = numeroCarta + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + sufixo + ".eon";	
+		            var nomeArquivo = numeroCarta.toString().padStart(3,'0') + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + sufixo + ".eon";	
 		            comp.markChanged(0);
 		            ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
 		            cartasCriadas++;
@@ -511,6 +573,16 @@ function tradutorArkhamFinal() {
 		    } catch (errCard) {
 		        println("❌ Erro no arquivo " + arquivoAtual.getName() + ": " + errCard);
 		    }
+		}
+		// --- GRAVAÇÃO DO RELATÓRIO DE ERROS ---
+		if (avisosFaltantes.length > 0) {
+		    var logTexto = "RELATÓRIO DE CÓDIGOS FALTANTES\n";
+		    logTexto += "=============================\n\n";
+		    logTexto += avisosFaltantes.join("\n");
+		    
+		    var arquivoLog = new java.io.File(pastaExport, "_AVISOS_DE_TRADUCAO.txt");
+		    java.nio.file.Files.write(arquivoLog.toPath(), logTexto.getBytes("UTF-8"));
+		    println("\n⚠️ " + avisosFaltantes.length + " códigos novos foram detectados. Verifique o arquivo _AVISOS_DE_TRADUCAO.txt");
 		}
         alert("Fábrica Concluída!\n" + cartasCriadas + " cartas exportadas.");
     } catch (err) {

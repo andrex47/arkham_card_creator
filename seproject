@@ -1,10 +1,8 @@
 # WARNING: If this file is deleted, Strange Eons will no longer
 # see this as a project/task folder!
-selected-members = :campanhas/03_Caminho_para_Carcosa/A_Mascara_Palida/Exportados
-first-row = 4
-open-folders = \
-    :campanhas:campanhas/03_Caminho_para_Carcosa:campanhas/03_Caminho_para_Carcosa/A_\
-    Mascara_Palida:strange eons
+selected-members =
+first-row = 1
+open-folders =
 notes = 
 res-id = andre
 type = PROJECT
