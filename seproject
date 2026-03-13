@@ -1,13 +1,10 @@
 # WARNING: If this file is deleted, Strange Eons will no longer
 # see this as a project/task folder!
-selected-members = \
-    :campanhas/03_Caminho_para_Carcosa/As_Estrelas_Negras_se_Elevam/Exportados/03264_\
-    1 - Siga o Plano.eon
-first-row = 0
+selected-members = :campanhas/03_Caminho_para_Carcosa/A_Mascara_Palida/Exportados
+first-row = 4
 open-folders = \
-    :campanhas:campanhas/03_Caminho_para_Carcosa:campanhas/03_Caminho_para_Carcosa/As\
-    _Estrelas_Negras_se_Elevam:campanhas/03_Caminho_para_Carcosa/As_Estrelas_Negras_s\
-    e_Elevam/Exportados:strange eons
+    :campanhas:campanhas/03_Caminho_para_Carcosa:campanhas/03_Caminho_para_Carcosa/A_\
+    Mascara_Palida:strange eons
 notes = 
 res-id = andre
 type = PROJECT
