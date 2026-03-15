@@ -378,9 +378,9 @@ function identificarMolde(dadosCarta) {
     var subtipo = (dadosCarta.subtype_code || "").toLowerCase();
     var textoFrente = (dadosCarta.text || "").toLowerCase();
 
-    // 1. Fraquezas (Molda como Player Card de Treachery)
-    if (subtipo.indexOf("weakness") !== -1) {
-        return MOLDES["weakness"];
+    // 1. Verifica Subtipos primeiro (Fraquezas e Fraquezas Básicas)
+    if (subtipo === "basicweakness" || subtipo === "weakness") {
+        return MOLDES["weakness"]; 
     }
 
     // 2. Especialização de Cenário
