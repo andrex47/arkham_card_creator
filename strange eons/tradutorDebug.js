@@ -214,7 +214,6 @@ var MOLDES = {
     "location": "Template_Location.eon",
     "agenda": "Template_Agenda.eon",
     "act": "Template_Act.eon",
-    "scenario": "Template_Scenario.eon"
 };
 // ===========================================================================
 // FUNÇÕES UTILITÁRIAS
@@ -365,6 +364,40 @@ function configurarRetrato(comp, codigo, pastaImagens, indice) {
         }
     }
 }
+
+/**
+ * Analisa os dados do JSON e decide qual arquivo .eon deve ser usado.
+ * @param {Object} dadosJson - O objeto da carta vindo do ArkhamDB.
+ * @returns {string} O nome do arquivo de molde definido no objeto MOLDES.
+ */
+/**
+ * Analisa os dados da carta e decide qual arquivo .eon deve ser usado.
+ */
+function identificarMolde(dadosCarta) {
+    var tipo = (dadosCarta.type_code || "").toLowerCase();
+    var subtipo = (dadosCarta.subtype_code || "").toLowerCase();
+    var textoFrente = (dadosCarta.text || "").toLowerCase();
+
+    // 1. Fraquezas (Molda como Player Card de Treachery)
+    if (subtipo.indexOf("weakness") !== -1) {
+        return MOLDES["weakness"];
+    }
+
+    // 2. Especialização de Cenário
+    if (tipo === "scenario") {
+        var temIconesCaos = textoFrente.indexOf("[skull]") !== -1 || 
+                           textoFrente.indexOf("[cultist]") !== -1;
+
+        if (temIconesCaos) {
+            return "Template_Scenario_Token.eon"; 
+        } else {
+            return "Template_Scenario_Setup.eon";
+        }
+    }
+
+    // 3. Padrão para os demais tipos (Asset, Event, Enemy, etc)
+    return MOLDES[tipo] || MOLDES["asset"];
+}
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
@@ -425,23 +458,17 @@ function tradutorArkhamFinal() {
 		
 		    try {
 		        var bytes = Files.readAllBytes(arquivoAtual.toPath());
-		        var c = JSON.parse(new java.lang.String(bytes, "UTF-8"));
-		        if (Array.isArray(c)) c = c[0];
-		        var tipo = (c.type_code).toLowerCase();
+				var dadosCarta = JSON.parse(new java.lang.String(bytes, "UTF-8"));
+				if (Array.isArray(dadosCarta)) {
+				    dadosCarta = dadosCarta[0];
+				}
+		        var tipo = (dadosCarta.type_code || "").toLowerCase();
+				var subtipo = (dadosCarta.subtype_code || "").toLowerCase();
 		
 		       // --- 1. BUSCA DO MOLDE ---
-				var subtipo = (c.subtype_code || "").toLowerCase();
-				var nomeArquivoMolde;
-				
-				// Verifica se é uma fraqueza primeiro
-				if (subtipo === "basicweakness" || subtipo === "weakness") {
-				    nomeArquivoMolde = MOLDES["weakness"];
-				} else {
-				    nomeArquivoMolde = MOLDES[tipo];
-				}
-				
+				var nomeArquivoMolde = identificarMolde(dadosCarta);
 				var arquivoMolde = new File(RAIZ_PROJETO, nomeArquivoMolde);
-		
+				
 		        if (!arquivoMolde.exists()) {
 		            println("❌ Molde não encontrado para tipo '" + tipo + "': " + arquivoMolde.getAbsolutePath());
 		            continue;
@@ -452,93 +479,117 @@ function tradutorArkhamFinal() {
 		
 		        // --- 2. ATRIBUTOS GERAIS (PARA TODAS AS CARTAS) ---
 		        // Identidade Básica
-		        comp.setName(c.name || "Sem Nome");
+		        comp.setName(dadosCarta.name || "Sem Nome");
 		        s.set("UpdateVisuals", "true");
-		        s.set("Artist", c.illustrator || "");
+		        s.set("Artist", dadosCarta.illustrator || "");
 		        s.set("Copyright", "<i>arkhamBR</i>");
 		
 		        // Rodapé e Coleção (Geral)
-		        var refPack = (c.pack_code || "").toLowerCase();
+		        var refPack = (dadosCarta.pack_code || "").toLowerCase();
 		        s.set("Collection", MAPA_ICONES_COLECAO[refPack] || "CustomCollection");
-		        var numeroCarta = c.position;
+		        var numeroCarta = dadosCarta.position;
 		        if (numeroCarta)
 		        {
 		        	s.set("CollectionNumber", String(numeroCarta));
 		        }
 		        // --- 3. ATRIBUTOS ESPECÍFICOS POR TIPO ---
-		        if (tipo === "scenario") {
-		            var txtFrente = c.text || "";
-		            s.set("Skull", limparTags(extrairSimbolo(txtFrente, "[skull]")));
-		            s.set("Cultist", limparTags(extrairSimbolo(txtFrente, "[cultist]")));
-		            s.set("Tablet", limparTags(extrairSimbolo(txtFrente, "[tablet]")));
-		            s.set("ElderThing", limparTags(extrairSimbolo(txtFrente, "[elder_thing]")));
-		            s.set("ScenarioTitle", "Fácil / Normal");
-		            s.set("ScenarioTitle2", "Difícil / Especialista");  
-		        } 
+				if (tipo === "scenario") {
+				    var txtFrente = dadosCarta.text || "";
+				    var txtVerso = dadosCarta.back_text || "";
+				
+				    // Se o molde for o de TOKENS, focamos nos símbolos de caos
+				    if (nomeArquivoMolde === "Template_Scenario_Token.eon") {
+				        // Frente: Fácil/Normal
+				        s.set("Skull", limparTags(extrairSimbolo(txtFrente, "[skull]")));
+				        s.set("Cultist", limparTags(extrairSimbolo(txtFrente, "[cultist]")));
+				        s.set("Tablet", limparTags(extrairSimbolo(txtFrente, "[tablet]")));
+				        s.set("ElderThing", limparTags(extrairSimbolo(txtFrente, "[elder_thing]")));
+				        
+				        // Verso: Difícil/Especialista (Usando sua descoberta do Skull2)
+				        if (txtVerso !== "") {
+				            s.set("Skull2", limparTags(extrairSimbolo(txtVerso, "[skull]")));
+				            s.set("Cultist2", limparTags(extrairSimbolo(txtVerso, "[cultist]")));
+				            s.set("Tablet2", limparTags(extrairSimbolo(txtVerso, "[tablet]")));
+				            s.set("ElderThing2", limparTags(extrairSimbolo(txtVerso, "[elder_thing]")));
+				        }
+				        
+				        s.set("ScenarioTitle", "Fácil / Normal");
+				        s.set("ScenarioTitle2", "Difícil / Especialista");
+				    } 
+				    
+				    // Se o molde for o de SETUP, focamos no texto corrido de regras
+				    else if (nomeArquivoMolde === "Template_Scenario_Setup.eon") {
+				        s.set("Rules", limparTags(txtFrente)); // Frente do setup
+				        if (txtVerso !== "") {
+				            s.set("RulesBack", limparTags(txtVerso)); // Verso do setup
+				            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
+				        }
+				    }
+}
 		        else if (tipo === "act" || tipo === "agenda") {
-		            s.set("ScenarioDeckID", c.stage ? String(c.stage) : "a");
-		            s.set("Rules", limparTags(c.text || ""));
+		            s.set("ScenarioDeckID", dadosCarta.stage ? String(dadosCarta.stage) : "a");
+		            s.set("Rules", limparTags(dadosCarta.text || ""));
 		            if (tipo === "act") {
-		                s.set("Clues", String(c.clues || "0"));
-		                s.set("ActStory", c.flavor || "");
+		                s.set("Clues", String(dadosCarta.clues || "0"));
+		                s.set("ActStory", dadosCarta.flavor || "");
 		            } else {
-		                s.set("Doom", String(c.doom || "0"));
-		                s.set("AgendaStory", c.flavor || "");
+		                s.set("Doom", String(dadosCarta.doom || "0"));
+		                s.set("AgendaStory", dadosCarta.flavor || "");
 		            }
-		            if (c.back_name) s.set("TitleBack", c.back_name);
-		            if (c.back_flavor) s.set("AccentedStoryABack", c.back_flavor);
-		            if (c.back_text) s.set("RulesABack", limparTags(c.back_text));
+		            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
+		            if (dadosCarta.back_flavor) s.set("AccentedStoryABack", dadosCarta.back_flavor);
+		            if (dadosCarta.back_text) s.set("RulesABack", limparTags(dadosCarta.back_text));
 		        } 
 		        else if (tipo === "location") {
-		            s.set("Shroud", String(c.shroud !== undefined ? c.shroud : "0"));
-		            s.set("Clues", String(c.clues || "0") + (c.clues_fixed === false ? " <per>" : ""));
-		            s.set("LocationIcon", c.location_symbol || "None");
-		            s.set("Rules", limparTags(c.text || ""));
-		            if (c.back_name) s.set("TitleBack", c.back_name);
-		            if (c.back_text) s.set("RulesBack", limparTags(c.back_text));
+		            s.set("Shroud", String(dadosCarta.shroud !== undefined ? dadosCarta.shroud : "0"));
+		            s.set("Clues", String(dadosCarta.clues || "0") + (dadosCarta.clues_fixed === false ? " <per>" : ""));
+		            s.set("LocationIcon", dadosCarta.location_symbol || "None");
+		            s.set("Rules", limparTags(dadosCarta.text || ""));
+		            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
+		            if (dadosCarta.back_text) s.set("RulesBack", limparTags(dadosCarta.back_text));
 		        } 
 		        else if (tipo === "enemy") {
-		            s.set("Fight", String(c.enemy_fight !== undefined ? c.enemy_fight : "0"));
-		            s.set("Health", String(c.health || "0") + (c.health_per_investigator ? " <per>" : ""));
-		            s.set("Evade", String(c.enemy_evade !== undefined ? c.enemy_evade : "0"));
-		            s.set("Damage", String(c.enemy_damage || "0"));
-		            s.set("Horror", String(c.enemy_horror || "0"));
-		            s.set("Traits", c.traits || "");
-		            s.set("Rules", limparTags(c.text || ""));
+		            s.set("Fight", String(dadosCarta.enemy_fight !== undefined ? dadosCarta.enemy_fight : "0"));
+		            s.set("Health", String(dadosCarta.health || "0") + (dadosCarta.health_per_investigator ? " <per>" : ""));
+		            s.set("Evade", String(dadosCarta.enemy_evade !== undefined ? dadosCarta.enemy_evade : "0"));
+		            s.set("Damage", String(dadosCarta.enemy_damage || "0"));
+		            s.set("Horror", String(dadosCarta.enemy_horror || "0"));
+		            s.set("Traits", dadosCarta.traits || "");
+		            s.set("Rules", limparTags(dadosCarta.text || ""));
 		        } 
 		        else {
 		            // Assets, Events, Skills
-		            s.set("Traits", c.traits || "");
-		            s.set("Rules", limparTags(c.text || ""));
-		            if (c.cost !== undefined) 
+		            s.set("Traits", dadosCarta.traits || "");
+		            s.set("Rules", limparTags(dadosCarta.text || ""));
+		            if (dadosCarta.cost !== undefined) 
 		            {
-		            	s.set("ResourceCost", String(c.cost));
+		            	s.set("ResourceCost", String(dadosCarta.cost));
 		            }
-		            if (c.xp !== undefined) 
+		            if (dadosCarta.xp !== undefined) 
 		            {
-		            	s.set("Level", String(c.xp));
+		            	s.set("Level", String(dadosCarta.xp));
 		            }
 		            // Lógica de Classe para Assets/Events
-		            if (c.faction_code) {
-		                s.set("CardClass", MAPA_CLASSES[c.faction_code.toLowerCase()]);
-		                if (c.faction2_code) s.set("CardClass2", MAPA_CLASSES[c.faction2_code.toLowerCase()]);
+		            if (dadosCarta.faction_code) {
+		                s.set("CardClass", MAPA_CLASSES[dadosCarta.faction_code.toLowerCase()]);
+		                if (dadosCarta.faction2_code) s.set("CardClass2", MAPA_CLASSES[dadosCarta.faction2_code.toLowerCase()]);
 		            }
 		        }
 		
 		        // --- 4. ÍCONES DE HABILIDADE (PARA QUEM NÃO É CENÁRIO) ---
 		        if (tipo !== "scenario" && tipo !== "act" && tipo !== "agenda") {
-		            var listaIcones = [];
-		            for (var k = 0; k < MAPA_SKILLS.length; k++) {
-		                var nIcons = c[MAPA_SKILLS[k].json] || 0;
-		                for (var n = 0; n < nIcons; n++) listaIcones.push(MAPA_SKILLS[k].eons);
-		            }
+					var listaIcones = [];
+				    for (var k = 0; k < MAPA_SKILLS.length; k++) {
+				        var nIcons = dadosCarta[MAPA_SKILLS[k].json] || 0; 
+				        for (var n = 0; n < nIcons; n++) listaIcones.push(MAPA_SKILLS[k].eons);
+				    }
 		            for (var slotIdx = 1; slotIdx <= 6; slotIdx++) {
 		                s.set("Skill" + slotIdx, (slotIdx <= listaIcones.length) ? listaIcones[slotIdx - 1] : "None");
 		            }
 		        }
 		        
 				// --- AJUSTE DE ÍCONE DE ENCONTRO ---
-				var chaveEncontro = (c.encounter_code || c.pack_code || "").toLowerCase();
+				var chaveEncontro = (dadosCarta.encounter_code || dadosCarta.pack_code || "").toLowerCase();
 				
 				if ((tipo === "scenario" || tipo === "act" || tipo === "agenda" || tipo === "enemy" || tipo === "treachery" || tipo === "location") 
     				&& (subtipo !== "basicweakness" && subtipo !== "weakness")) {
@@ -566,10 +617,10 @@ function tradutorArkhamFinal() {
 				}
 		
 		        // --- 5. SALVAMENTO E FINALIZAÇÃO ---
-				var qtd = parseInt(c.quantity || 1);
+				var qtd = parseInt(dadosCarta.quantity || 1);
 				for (var j = 0; j < qtd; j++) {
-				    if (c.encounter_position && subtipo !== "basicweakness" && subtipo !== "weakness") {
-				        var posAtu = parseInt(c.encounter_position) + j;
+				    if (dadosCarta.encounter_position && subtipo !== "basicweakness" && subtipo !== "weakness") {
+				        var posAtu = parseInt(dadosCarta.encounter_position) + j;
 				        s.set("EncounterNumber", String(posAtu));
 				        var totalEnc = mapaTotais[chaveEncontro];
 				        if (totalEnc) s.set("EncounterTotal", String(totalEnc));
@@ -580,7 +631,7 @@ function tradutorArkhamFinal() {
 				    }
 			
 		            var sufixo = (qtd > 1) ? "_" + (j + 1) : "";
-		            var nomeArquivo = numeroCarta.toString().padStart(3,'0') + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + sufixo + ".eon";	
+		            var nomeArquivo = numeroCarta.toString().padStart(3,'0') + " - " + (dadosCarta.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + sufixo + ".eon";	
 		            comp.markChanged(0);
 		            ResourceKit.writeGameComponentToFile(new File(pastaExport, nomeArquivo), comp);
 		            cartasCriadas++;
@@ -592,14 +643,12 @@ function tradutorArkhamFinal() {
 		    }
 		}
 		// --- GRAVAÇÃO DO RELATÓRIO DE ERROS ---
+		// No lugar do bloco removido, deixe apenas isso:
 		if (avisosFaltantes.length > 0) {
-		    var logTexto = "RELATÓRIO DE CÓDIGOS FALTANTES\n";
-		    logTexto += "=============================\n\n";
-		    logTexto += avisosFaltantes.join("\n");
-		    
-		    var arquivoLog = new java.io.File(pastaExport, "_AVISOS_DE_TRADUCAO.txt");
-		    java.nio.file.Files.write(arquivoLog.toPath(), logTexto.getBytes("UTF-8"));
-		    println("\n⚠️ " + avisosFaltantes.length + " códigos novos foram detectados. Verifique o arquivo _AVISOS_DE_TRADUCAO.txt");
+		    println("\ CÓDIGOS AUTOMATIZADOS/FALTANTES NO MAPA:");
+		    for (var a = 0; a < avisosFaltantes.length; a++) {
+		        println("   " + avisosFaltantes[a]);
+		    }
 		}
         alert("Fábrica Concluída!\n" + cartasCriadas + " cartas exportadas.");
     } catch (err) {
