@@ -428,27 +428,33 @@ function tradutorArkhamFinal() {
        println("🏠 Raiz do Projeto detectada: " + RAIZ_PROJETO.getAbsolutePath());
        println("📂 Pasta de Destino: " + pastaExport.getAbsolutePath());
         
-        // --- PASSO 0: PRE-SCAN TOTAIS ---
-        var mapaTotais = {};
-        for (var i = 0; i < arquivos.length; i++) {
-            var arq = arquivos[i];
-            if (arq.isFile() && arq.getName().toLowerCase().endsWith(".json")) {
-                try {
-                    var b = java.nio.file.Files.readAllBytes(arq.toPath());
-                    var card = JSON.parse(new java.lang.String(b, "UTF-8"));
-                    if (Array.isArray(card)) card = card[0];
-                    
-                    // Chave agora prioriza o encontro, senão usa o pack
-                    var chaveTotal = (card.encounter_code || card.pack_code || "").toLowerCase();
-                    
-                    if (chaveTotal && card.encounter_position) {
-                        if (!mapaTotais[chaveTotal] || card.encounter_position > mapaTotais[chaveTotal]) {
-                            mapaTotais[chaveTotal] = card.encounter_position;
-                        }
-                    }
-                } catch(e) {}
-            }
-        }
+       // --- PASSO 0: PRE-SCAN TOTAIS (CORRIGIDO) ---
+		var mapaTotais = {};
+		for (var i = 0; i < arquivos.length; i++) {
+		    var arq = arquivos[i];
+		    if (arq.isFile() && arq.getName().toLowerCase().endsWith(".json")) {
+		        try {
+		            var b = java.nio.file.Files.readAllBytes(arq.toPath());
+		            var card = JSON.parse(new java.lang.String(b, "UTF-8"));
+		            if (Array.isArray(card)) card = card[0];
+		            
+		            var chaveTotal = (card.encounter_code || card.pack_code || "").toLowerCase();
+		            
+		            if (chaveTotal && card.encounter_position) {
+		                // Calculamos a última posição ocupada por esta carta
+		                // Se pos é 30 e qtd é 2, ela ocupa 30 e 31. O total do set é 31.
+		                var quantidadeCarta = parseInt(card.quantity || 1);
+		                var ultimaPosicaoDestaCarta = parseInt(card.encounter_position) + (quantidadeCarta - 1);
+		
+		                if (!mapaTotais[chaveTotal] || ultimaPosicaoDestaCarta > mapaTotais[chaveTotal]) {
+		                    mapaTotais[chaveTotal] = ultimaPosicaoDestaCarta;
+		                }
+		            }
+		        } catch(e) {
+		            println("Erro no pre-scan do arquivo " + arq.getName());
+		        }
+		    }
+		}
         println("📊 Totais de Encontro mapeados: " + JSON.stringify(mapaTotais));
         var avisosFaltantes = []; // Lista para guardar códigos não encontrados
         var cartasCriadas = 0;
@@ -492,6 +498,26 @@ function tradutorArkhamFinal() {
 		        {
 		        	s.set("CollectionNumber", String(numeroCarta));
 		        }
+		        // --- 2.5 ATRIBUTOS DE JOGADOR (CLASSE, CUSTO, NÍVEL) ---
+				// Define a Classe (Guardian, Seeker, etc.)
+				if (dadosCarta.faction_code) {
+				    var classeTraduzida = MAPA_CLASSES[dadosCarta.faction_code.toLowerCase()];
+				    s.set("CardClass", classeTraduzida || "Neutral");
+				}
+				
+				// Define o Nível (XP) - As bolinhas abaixo do custo
+				s.set("Level", String(dadosCarta.xp || "0"));
+				
+				// Define o Custo (se houver)
+				if (dadosCarta.cost !== undefined) {
+				    s.set("ResourceCost", String(dadosCarta.cost));
+				}
+				
+				// Define o Slot (Mão, Arcano, Aliado, etc.)
+				if (dadosCarta.real_slot) {
+				    var slotFormatado = MAPA_SLOTS[dadosCarta.real_slot.toLowerCase()];
+				    if (slotFormatado) s.set("Slot", slotFormatado);
+				}
 		        // --- 3. ATRIBUTOS ESPECÍFICOS POR TIPO ---
 				if (tipo === "scenario") {
 				    var txtFrente = dadosCarta.text || "";
@@ -516,16 +542,36 @@ function tradutorArkhamFinal() {
 				        s.set("ScenarioTitle", "Fácil / Normal");
 				        s.set("ScenarioTitle2", "Difícil / Especialista");
 				    } 
+				    else if (nomeArquivoMolde === "Template_Scenario_Setup.eon") 
+					{
+				    // FRENTE (Side A)
+				    // Usamos RulesA como o campo principal de regras
+				    s.set("RulesA", limparTags(txtFrente));
 				    
-				    // Se o molde for o de SETUP, focamos no texto corrido de regras
-				    else if (nomeArquivoMolde === "Template_Scenario_Setup.eon") {
-				        s.set("Rules", limparTags(txtFrente)); // Frente do setup
-				        if (txtVerso !== "") {
-				            s.set("RulesBack", limparTags(txtVerso)); // Verso do setup
-				            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
+				    // Se houver texto de flavor na frente, você pode usar:
+				    if (dadosCarta.flavor) {
+				        s.set("AccentedStoryA", dadosCarta.flavor);
+				    }
+				
+				    // VERSO (Side B/Back)
+				    if (txtVerso !== "") {
+				        // Pelo seu dump, o verso usa o sufixo "Back" após a letra
+				        s.set("RulesABack", limparTags(txtVerso));
+				        
+				        if (dadosCarta.back_name) {
+				            s.set("TitleBack", dadosCarta.back_name);
+				        }
+				        
+				        if (dadosCarta.back_flavor) {
+				            s.set("AccentedStoryABack", dadosCarta.back_flavor);
 				        }
 				    }
-}
+				    
+				    // Garantir que a numeração da coleção apareça (conforme o seu dump)
+				    s.set("ShowCollectionNumberFront", "1");
+				    s.set("ShowCollectionNumberBack", "1");
+				}
+			}
 		        else if (tipo === "act" || tipo === "agenda") {
 		            s.set("ScenarioDeckID", dadosCarta.stage ? String(dadosCarta.stage) : "a");
 		            s.set("Rules", limparTags(dadosCarta.text || ""));
@@ -541,13 +587,42 @@ function tradutorArkhamFinal() {
 		            if (dadosCarta.back_text) s.set("RulesABack", limparTags(dadosCarta.back_text));
 		        } 
 		        else if (tipo === "location") {
-		            s.set("Shroud", String(dadosCarta.shroud !== undefined ? dadosCarta.shroud : "0"));
-		            s.set("Clues", String(dadosCarta.clues || "0") + (dadosCarta.clues_fixed === false ? " <per>" : ""));
-		            s.set("LocationIcon", dadosCarta.location_symbol || "None");
-		            s.set("Rules", limparTags(dadosCarta.text || ""));
-		            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
-		            if (dadosCarta.back_text) s.set("RulesBack", limparTags(dadosCarta.back_text));
-		        } 
+				    // --- ATRIBUTOS DA FRENTE (Lado Não Revelado) ---
+				    s.set("Shroud", String(dadosCarta.shroud !== undefined ? dadosCarta.shroud : "0"));
+				    
+				    // Clues: verifica se é valor fixo ou por investigador (<per>)
+				    var pistas = String(dadosCarta.clues || "0");
+				    if (dadosCarta.clues_fixed === false) pistas += " <per>";
+				    s.set("Clues", pistas);
+				    
+				    s.set("LocationIcon", dadosCarta.location_symbol || "None");
+				    s.set("Traits", dadosCarta.traits || ""); // Traits da frente
+				    
+				    // Texto de Regras e Flavor da Frente
+				    s.set("Rules", limparTags(dadosCarta.text || ""));
+				    if (dadosCarta.flavor) {
+				        s.set("Flavor", dadosCarta.flavor); // Chave padrão de flavor no Eons
+				    }
+				
+				    // --- ATRIBUTOS DO VERSO (Lado Revelado) ---
+				    if (dadosCarta.back_text || dadosCarta.back_flavor || dadosCarta.back_name) {
+				        if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
+				        
+				        s.set("RulesBack", limparTags(dadosCarta.back_text || ""));
+				        
+				        if (dadosCarta.back_flavor) {
+				            s.set("FlavorBack", dadosCarta.back_flavor);
+				        }
+				        
+				        // Algumas localidades mudam ou adicionam Traits no verso
+				        if (dadosCarta.back_traits) {
+				            s.set("TraitsBack", dadosCarta.back_traits);
+				        } else {
+				            // Se o verso não tem traits específicos, costuma-se repetir os da frente
+				            s.set("TraitsBack", dadosCarta.traits || "");
+				        }
+				    }
+				}
 		        else if (tipo === "enemy") {
 		            s.set("Fight", String(dadosCarta.enemy_fight !== undefined ? dadosCarta.enemy_fight : "0"));
 		            s.set("Health", String(dadosCarta.health || "0") + (dadosCarta.health_per_investigator ? " <per>" : ""));
@@ -558,22 +633,20 @@ function tradutorArkhamFinal() {
 		            s.set("Rules", limparTags(dadosCarta.text || ""));
 		        } 
 		        else {
-		            // Assets, Events, Skills
-		            s.set("Traits", dadosCarta.traits || "");
-		            s.set("Rules", limparTags(dadosCarta.text || ""));
-		            if (dadosCarta.cost !== undefined) 
-		            {
-		            	s.set("ResourceCost", String(dadosCarta.cost));
-		            }
-		            if (dadosCarta.xp !== undefined) 
-		            {
-		            	s.set("Level", String(dadosCarta.xp));
-		            }
-		            // Lógica de Classe para Assets/Events
-		            if (dadosCarta.faction_code) {
-		                s.set("CardClass", MAPA_CLASSES[dadosCarta.faction_code.toLowerCase()]);
-		                if (dadosCarta.faction2_code) s.set("CardClass2", MAPA_CLASSES[dadosCarta.faction2_code.toLowerCase()]);
-		            }
+		            // Dentro do bloco de Treachery ou no else que trata Assets/Events/Treacheries:
+					s.set("Traits", dadosCarta.traits || "");
+					s.set("Rules", limparTags(dadosCarta.text || ""));
+					
+					// Adicione este tratamento para o Flavor Text
+					if (dadosCarta.flavor) {
+					    s.set("Flavor", dadosCarta.flavor);
+					}
+					
+					// Se for uma Traição de Cenário (Treachery), ela pode ter verso em casos raros (como Retornos)
+					if (tipo === "treachery" && dadosCarta.double_sided) {
+					    if (dadosCarta.back_text) s.set("RulesBack", limparTags(dadosCarta.back_text));
+					    if (dadosCarta.back_flavor) s.set("FlavorBack", dadosCarta.back_flavor);
+					}
 		        }
 		
 		        // --- 4. ÍCONES DE HABILIDADE (PARA QUEM NÃO É CENÁRIO) ---
