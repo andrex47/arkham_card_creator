@@ -209,7 +209,8 @@ var MOLDES = {
     "enemy": "Template_Enemy.eon",
     "event": "Template_Event.eon",
     "skill": "Template_Skill.eon",
-    "treachery": "Template_Treachery.eon",
+    "treachery": "Template_Treachery.eon", // Este continua sendo o de cenário
+    "weakness": "Template_Weakness.eon",   // O novo molde que você criou
     "location": "Template_Location.eon",
     "agenda": "Template_Agenda.eon",
     "act": "Template_Act.eon",
@@ -367,7 +368,7 @@ function configurarRetrato(comp, codigo, pastaImagens, indice) {
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
+const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
     
 function tradutorArkhamFinal() {
     try {
@@ -428,9 +429,18 @@ function tradutorArkhamFinal() {
 		        if (Array.isArray(c)) c = c[0];
 		        var tipo = (c.type_code).toLowerCase();
 		
-		        // --- 1. BUSCA DO MOLDE ---
-		        var nomeArquivoMolde = MOLDES[tipo];
-		        var arquivoMolde = new File(RAIZ_PROJETO, nomeArquivoMolde);
+		       // --- 1. BUSCA DO MOLDE ---
+				var subtipo = (c.subtype_code || "").toLowerCase();
+				var nomeArquivoMolde;
+				
+				// Verifica se é uma fraqueza primeiro
+				if (subtipo === "basicweakness" || subtipo === "weakness") {
+				    nomeArquivoMolde = MOLDES["weakness"];
+				} else {
+				    nomeArquivoMolde = MOLDES[tipo];
+				}
+				
+				var arquivoMolde = new File(RAIZ_PROJETO, nomeArquivoMolde);
 		
 		        if (!arquivoMolde.exists()) {
 		            println("❌ Molde não encontrado para tipo '" + tipo + "': " + arquivoMolde.getAbsolutePath());
@@ -530,7 +540,8 @@ function tradutorArkhamFinal() {
 				// --- AJUSTE DE ÍCONE DE ENCONTRO ---
 				var chaveEncontro = (c.encounter_code || c.pack_code || "").toLowerCase();
 				
-				if (tipo === "scenario" || tipo === "act" || tipo === "agenda" || tipo === "enemy" || tipo === "treachery" || tipo === "location") {
+				if ((tipo === "scenario" || tipo === "act" || tipo === "agenda" || tipo === "enemy" || tipo === "treachery" || tipo === "location") 
+    				&& (subtipo !== "basicweakness" && subtipo !== "weakness")) {
 				    if (chaveEncontro !== "") {
 				        var iconeEons = MAPA_ICONES_CENARIO[chaveEncontro];
 				
@@ -550,18 +561,24 @@ function tradutorArkhamFinal() {
 				             if (avisosFaltantes.indexOf(msg) === -1) avisosFaltantes.push(msg);
 				        }
 				    }
+				} else if (subtipo === "basicweakness" || subtipo === "weakness") {
+    				s.set("Encounter", "None"); // Garante que fraquezas não tenham ícone de cenário no topo
 				}
 		
 		        // --- 5. SALVAMENTO E FINALIZAÇÃO ---
-		        var qtd = parseInt(c.quantity || 1);
-		        for (var j = 0; j < qtd; j++) {
-		            if (c.encounter_position) {
-		                var posAtu = parseInt(c.encounter_position) + j;
-		                s.set("EncounterNumber", String(posAtu));
-						var totalEnc = mapaTotais[chaveEncontro]; // Use a mesma chave de encontro usada no ícone
-		                if (totalEnc) s.set("EncounterTotal", String(totalEnc));
-		            }
-		
+				var qtd = parseInt(c.quantity || 1);
+				for (var j = 0; j < qtd; j++) {
+				    if (c.encounter_position && subtipo !== "basicweakness" && subtipo !== "weakness") {
+				        var posAtu = parseInt(c.encounter_position) + j;
+				        s.set("EncounterNumber", String(posAtu));
+				        var totalEnc = mapaTotais[chaveEncontro];
+				        if (totalEnc) s.set("EncounterTotal", String(totalEnc));
+				    } else {
+				        // Se for fraqueza, limpamos os campos de encontro para não sujar o card
+				        s.set("EncounterNumber", "");
+				        s.set("EncounterTotal", "");
+				    }
+			
 		            var sufixo = (qtd > 1) ? "_" + (j + 1) : "";
 		            var nomeArquivo = numeroCarta.toString().padStart(3,'0') + " - " + (c.name || "SemNome").replace(/[<>:"/\\|?*]/g, "") + sufixo + ".eon";	
 		            comp.markChanged(0);
