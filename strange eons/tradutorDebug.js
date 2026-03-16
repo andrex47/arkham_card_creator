@@ -401,8 +401,8 @@ function identificarMolde(dadosCarta) {
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
-    
+//const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
+const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich/";
 function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
@@ -485,7 +485,13 @@ function tradutorArkhamFinal() {
 		
 		        // --- 2. ATRIBUTOS GERAIS (PARA TODAS AS CARTAS) ---
 		        // Identidade Básica
-		        comp.setName(dadosCarta.name || "Sem Nome");
+		        // --- No bloco de Atributos Gerais ---
+				comp.setName(dadosCarta.name || "Sem Nome");
+				
+				// Adicione esta linha:
+				if (dadosCarta.subname) {
+				    s.set("Subtitle", dadosCarta.subname);
+				}
 		        s.set("UpdateVisuals", "true");
 		        s.set("Artist", dadosCarta.illustrator || "");
 		        s.set("Copyright", "<i>arkhamBR</i>");
@@ -518,6 +524,7 @@ function tradutorArkhamFinal() {
 				    var slotFormatado = MAPA_SLOTS[dadosCarta.real_slot.toLowerCase()];
 				    if (slotFormatado) s.set("Slot", slotFormatado);
 				}
+				
 		        // --- 3. ATRIBUTOS ESPECÍFICOS POR TIPO ---
 				if (tipo === "scenario") {
 				    var txtFrente = dadosCarta.text || "";
