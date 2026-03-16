@@ -495,7 +495,9 @@ function tradutorArkhamFinal() {
 		        s.set("UpdateVisuals", "true");
 		        s.set("Artist", dadosCarta.illustrator || "");
 		        s.set("Copyright", "<i>arkhamBR</i>");
-		
+                if (dadosCarta.victory !== undefined) {
+                    s.set("Victory", String(dadosCarta.victory));
+                }
 		        // Rodapé e Coleção (Geral)
 		        var refPack = (dadosCarta.pack_code || "").toLowerCase();
 		        s.set("Collection", MAPA_ICONES_COLECAO[refPack] || "CustomCollection");
