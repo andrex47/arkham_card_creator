@@ -401,8 +401,8 @@ function identificarMolde(dadosCarta) {
 // ===========================================================================
 // FUNÇÃO PRINCIPAL
 // ===========================================================================
-//const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
-const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich/";
+const caminhoPack = "C:/Users/andre/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich";
+//const caminhoPack = "/Users/andrehankedoamaral/PhpstormProjects/arkham_card_creator/campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich/";
 function tradutorArkhamFinal() {
     try {
         println("\n--- 🚀 INICIANDO TRADUÇÃO FINAL ---");
@@ -581,20 +581,46 @@ function tradutorArkhamFinal() {
 				    s.set("ShowCollectionNumberBack", "1");
 				}
 			}
-		        else if (tipo === "act" || tipo === "agenda") {
-		            s.set("ScenarioDeckID", dadosCarta.stage ? String(dadosCarta.stage) : "a");
-		            s.set("Rules", limparTags(dadosCarta.text || ""));
-		            if (tipo === "act") {
-		                s.set("Clues", String(dadosCarta.clues || "0"));
-		                s.set("ActStory", dadosCarta.flavor || "");
-		            } else {
-		                s.set("Doom", String(dadosCarta.doom || "0"));
-		                s.set("AgendaStory", dadosCarta.flavor || "");
-		            }
-		            if (dadosCarta.back_name) s.set("TitleBack", dadosCarta.back_name);
-		            if (dadosCarta.back_flavor) s.set("AccentedStoryABack", dadosCarta.back_flavor);
-		            if (dadosCarta.back_text) s.set("RulesABack", limparTags(dadosCarta.back_text));
-		        } 
+		      else if (tipo === "act" || tipo === "agenda") {
+			    // --- 1. NUMERAÇÃO E LADO ---
+			    // O ArkhamDB usa stage 1 para o Ato/Agenda 1. 
+			    // O template do Strange Eons usa ScenarioIndex para o número.
+			    s.set("ScenarioIndex", String(dadosCarta.stage || "1"));
+			    s.set("ScenarioDeckID", "a"); // Sempre 'a' para a frente
+			
+			    // --- 2. TEXTO DA FRENTE ---
+			    s.set("Rules", limparTags(dadosCarta.text || ""));
+			    
+			    if (tipo === "act") {
+			        s.set("Clues", String(dadosCarta.clues || "0"));
+			        s.set("ActStory", dadosCarta.flavor || "");
+			        // Se houver per_investigator no JSON, ativamos o asterisco/ícone
+			        if (dadosCarta.clues_fixed === false) s.set("PerInvestigator", "1");
+			    } else {
+			        s.set("Doom", String(dadosCarta.doom || "0"));
+			        s.set("AgendaStory", dadosCarta.flavor || "");
+			    }
+			
+			    // --- 3. TEXTO DO VERSO (USANDO SUAS DEFINIÇÕES DE DEFAULTS) ---
+			    if (dadosCarta.back_name) {
+			        s.set("TitleBack", dadosCarta.back_name);
+			    }
+			
+			    if (dadosCarta.back_flavor) {
+			        // Conforme seu setDefaults: AccentedStoryABack
+			        s.set("AccentedStoryABack", dadosCarta.back_flavor);
+			    }
+			
+			    if (dadosCarta.back_text) {
+			        // Conforme seu setDefaults: RulesABack
+			        s.set("RulesABack", limparTags(dadosCarta.back_text));
+			    }
+			
+			    // Se houver vitória no verso
+			    if (dadosCarta.victory !== undefined) {
+			        s.set("VictoryBack", "Vitória " + dadosCarta.victory + ".");
+			    }
+			}
 		        else if (tipo === "location") {
 				    // --- ATRIBUTOS DA FRENTE (Lado Não Revelado) ---
 				    s.set("Shroud", String(dadosCarta.shroud !== undefined ? dadosCarta.shroud : "0"));

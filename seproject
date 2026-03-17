@@ -1,8 +1,13 @@
 # WARNING: If this file is deleted, Strange Eons will no longer
 # see this as a project/task folder!
-selected-members =
-first-row = 1
-open-folders =
+selected-members = \
+    :campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich/Exportados/027 - Uma Fenda \
+    na Realidade (v.II).eon
+first-row = 59
+open-folders = \
+    :campanhas:campanhas/50_Retornos:campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwi\
+    ch:campanhas/50_Retornos/Retorno_ao_Legado_de_Dunwich/Exportados:campanhas/50_Ret\
+    ornos/Retorno_ao_Legado_de_Dunwich/Exportados/Imagens:strange eons
 notes = 
 res-id = andre
 type = PROJECT
