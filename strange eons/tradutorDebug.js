@@ -496,7 +496,7 @@ function tradutorArkhamFinal() {
 		        s.set("Artist", dadosCarta.illustrator || "");
 		        s.set("Copyright", "<i>arkhamBR</i>");
                 if (dadosCarta.victory !== undefined) {
-                    s.set("Victory", String(dadosCarta.victory));
+                    s.set("Victory",  "Vitória " + dadosCarta.victory + ".");
                 }
 		        // Rodapé e Coleção (Geral)
 		        var refPack = (dadosCarta.pack_code || "").toLowerCase();
@@ -577,7 +577,7 @@ function tradutorArkhamFinal() {
 				    }
 				    
 				    // Garantir que a numeração da coleção apareça (conforme o seu dump)
-				    s.set("ShowCollectionNumberFront", "1");
+				    s.set("ShowCollectionNumKberFront", "1");
 				    s.set("ShowCollectionNumberBack", "1");
 				}
 			}
@@ -586,7 +586,7 @@ function tradutorArkhamFinal() {
 			    // O ArkhamDB usa stage 1 para o Ato/Agenda 1. 
 			    // O template do Strange Eons usa ScenarioIndex para o número.
 			    s.set("ScenarioIndex", String(dadosCarta.stage || "1"));
-			    s.set("ScenarioDeckID", "a"); // Sempre 'a' para a frente
+			    //s.set("ScenarioDeckID", 'a'); // Sempre 'a' para a frente
 			
 			    // --- 2. TEXTO DA FRENTE ---
 			    s.set("Rules", limparTags(dadosCarta.text || ""));
@@ -629,8 +629,7 @@ function tradutorArkhamFinal() {
 				    var pistas = String(dadosCarta.clues || "0");
 				    if (dadosCarta.clues_fixed === false) pistas += " <per>";
 				    s.set("Clues", pistas);
-				    
-				    s.set("LocationIcon", dadosCarta.location_symbol || "None");
+
 				    s.set("Traits", dadosCarta.traits || ""); // Traits da frente
 				    
 				    // Texto de Regras e Flavor da Frente
